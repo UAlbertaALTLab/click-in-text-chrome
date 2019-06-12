@@ -13,13 +13,23 @@ const s = document.getElementsByTagName('script')[0]
 s.parentNode.insertBefore(ga, s)
 
 function translate(word, sl, tl, last_translation, onresponse, sendResponse, ga_event_name) {
+  // const options = {
+  //   url: 'http://localhost/cree-dictionary/_translate_cree/'+word,
+  //   data: {
+  //     q: word,
+  //     sl: sl,
+  //     tl: tl,
+  //   },
+  //   dataType: 'json',
+  //   success: function on_success(data) {
+  //     onresponse(data, word, tl, last_translation, sendResponse, ga_event_name)
+  //   },
+  //   error: function(xhr, status, e) {
+  //     console.log({e: e, xhr: xhr})
+  //   }
+  // }
   const options = {
-    url: 'https://clients5.google.com/translate_a/t?client=dict-chrome-ex',
-    data: {
-      q: word,
-      sl: sl,
-      tl: tl,
-    },
+    url: 'http://sapir.artsrn.ualberta.ca/cree-dictionary/_translate-cree/'+word,
     dataType: 'json',
     success: function on_success(data) {
       onresponse(data, word, tl, last_translation, sendResponse, ga_event_name)
@@ -60,32 +70,58 @@ function on_translation_response(data, word, tl, last_translation, sendResponse,
 
   console.log('raw_translation: ', data)
 
-  if ((!data.dict && !data.sentences) || (!data.dict && translationIsTheSameAsInput(data.sentences, word))) {
+  if (!data.translation || data.translation.length === 0) {
     translation.succeeded = false
-
     if (Options.do_not_show_oops()) {
       output = ''
     } else {
       output = 'Oops.. No translation found.'
     }
-  } else {
+  } else{
     translation.succeeded = true
     translation.word = word
-
     output = []
-    if (data.dict) { // full translation
-      data.dict.forEach(function(t) {
-        output.push({pos: t.pos, meanings: t.terms})
-      })
-    } else { // single word or sentence(s)
-      data.sentences.forEach(function(s) {
-        output.push(s.trans)
-      })
-      output = output.join(' ')
-    }
+    if (data.translation) { // full translation
+      data.translation.forEach(function (t) {
 
-    translation.sl = data.src
+        const definition_list = []
+
+        t.definitions.forEach(function (dic) {
+          definition_list.push(dic.definition +'; ' +  dic.source)
+        }
+        )
+        output.push({pos: t.lemma + t.analysis, meanings: definition_list})
+      })
+    }
+    translation.sl = 'cree'
   }
+
+  // if ((!data.dict && !data.sentences) || (!data.dict && translationIsTheSameAsInput(data.sentences, word))) {
+  //   translation.succeeded = false
+  //
+  //   if (Options.do_not_show_oops()) {
+  //     output = ''
+  //   } else {
+  //     output = 'Oops.. No translation found.'
+  //   }
+  // } else {
+  //   translation.succeeded = true
+  //   translation.word = word
+  //
+  //   output = []
+  //   if (data.dict) { // full translation
+  //     data.dict.forEach(function(t) {
+  //       output.push({pos: t.pos, meanings: ['123', '456']})
+  //     })
+  //   } else { // single word or sentence(s)
+  //     data.sentences.forEach(function(s) {
+  //       output.push(s.trans)
+  //     })
+  //     output = output.join(' ')
+  //   }
+  //
+  //   translation.sl = data.src
+  // }
 
   if (!( output instanceof String)) {
     output = JSON.stringify(output)
