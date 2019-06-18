@@ -11,7 +11,7 @@
       body, table {
         color: #4f4f4f;
         font: normal normal normal 14px Verdana, Tahoma, sans-serif;
-        border-spacing: 0px;
+        border-spacing: 0;
       }
 
       input, button {
@@ -62,29 +62,11 @@
         margin-left: 8px;
       }
 
-      .hint {
-        color: blue;
-      }
-
-      .help {
-        cursor: help;
-        border-bottom: 1px dotted;
-      }
 
       .disabled {
         color: #ccc;
       }
 
-      .pulse {
-        border-radius: 3%;
-        border: 1px solid red;
-        box-shadow: 0 0 0 rgba(255, 0, 0, 0.4);
-        animation: pulse 2s infinite;
-      }
-
-      .pulse:hover {
-        animation: none;
-      }
 
       @keyframes pulse {
         0% {
@@ -103,8 +85,6 @@
     <div class="content">
       <div class="heading">Cree Click-in-text Options</div>
       <div class="option">
-        <label for="target_lang">Translate into</label>
-        <select id="target_lang"></select>
         <label for="translate_by">when I</label>
         <select id="translate_by" name="translate_by">
           <option value="click">click on word</option>
@@ -117,30 +97,7 @@
       </div>
 
       <div id="more_options" style="display:none">
-        <div class="option">
-          <label for="from_lang">Translate from</label>
-          <select id="from_lang"></select>
-        </div>
 
-        <div class="option">
-          <label for="reverse_lang">Reverse translate to</label>
-          <select id="reverse_lang"></select>
-          <span class="hint"> (from 'Translate into')</span>
-        </div>
-
-        <div class="option">
-          <input type="checkbox" id="tts" name="tts"/>
-          <label for="tts">Enable Text-To-Speech</label>
-          <label for="tts_key">when I press
-            <select name="tts_key" id="tts_key"></select>
-            while popup is showing
-          </label>
-        </div>
-
-        <div class="option">
-          <input type="checkbox" id="show_from_lang"></input>
-          <label for="show_from_lang">Show 'translated from' language</label>
-        </div>
 
         <div class="option">
           Configure "type and translate" and "copy translation" hotkeys <a class="set_hotkey" href='#'>here</a>

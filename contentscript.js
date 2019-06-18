@@ -1,5 +1,4 @@
 import TransOver from './lib/transover_utils'
-import TransOverLanguages from './lib/languages'
 const debug = require('debug')('transover')
 
 let options
@@ -20,7 +19,6 @@ function ignoreThisPage(options) {
   const isBlacklisted = $.grep(options.except_urls, function(url) { return RegExp(url).test(window.location.href) }).length > 0
   const isWhitelisted = $.grep(options.only_urls, function(url) { return RegExp(url).test(window.location.href) }).length > 0 ||
     options.only_urls.length === 0
-
   return isBlacklisted || !isWhitelisted
 }
 
@@ -65,7 +63,6 @@ function registerTransoverComponent(component) {
 }
 
 let last_translation
-
 function showPopup(e, content) {
   removePopup('transover-type-and-translate-popup')
 
@@ -111,7 +108,6 @@ function calculatePosition(x, y, $popup) {
 
     $popup.attr('content-width', $(window).width() - margin*2 - non_content_x )
     $popup.attr('content-height', Number($popup.attr('content-height')) + 4)
-
     pos.x = margin
   }
 
@@ -143,6 +139,7 @@ document.addEventListener('visibilitychange', function () {
       options = JSON.parse( response.options )
       disable_on_this_page = ignoreThisPage(options)
       chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
+
     })
   }
 }, false)
@@ -313,6 +310,20 @@ function process(e) {
     word = getHitWord(e)
   }
   if (word != '') {
+    // chrome.runtime.sendMessage({handler: 'translate', word: word}, function(response) {
+    //   debug('response: ', response)
+    //
+    //   const translation = TransOver.deserialize(response.translation)
+    //
+    //   if (!translation) {
+    //     debug('skipping empty translation')
+    //     return
+    //   }
+    //
+    //   last_translation = translation
+    //   showPopup(e, TransOver.formatTranslation(translation))
+    // })
+
     chrome.extension.sendRequest({handler: 'translate', word: word}, function(response) {
       debug('response: ', response)
 
@@ -330,15 +341,14 @@ function process(e) {
 }
 
 function withOptionsSatisfied(e, do_stuff) {
-  if (options.target_lang) {
-    //respect 'translate only when alt pressed' option
-    if (options.word_key_only && !show_popup_key_pressed) return
+  //respect 'translate only when alt pressed' option
+  if (options.word_key_only && !show_popup_key_pressed) return
 
-    //respect "don't translate these sites"
-    if (disable_on_this_page) return
+  //respect "don't translate these sites"
+  if (disable_on_this_page) return
 
-    do_stuff()
-  }
+  do_stuff()
+
 }
 
 $(document).on('mousestop', function(e) {
@@ -349,7 +359,7 @@ $(document).on('mousestop', function(e) {
         process(e)
       }
     } else {
-      if (options.translate_by == 'point') {
+      if (options.translate_by === 'point') {
         process(e)
       }
     }
@@ -358,7 +368,7 @@ $(document).on('mousestop', function(e) {
 
 $(document).click(function(e) {
   withOptionsSatisfied(e, function() {
-    if (options.translate_by != 'click')
+    if (options.translate_by !== 'click')
       return
     if ($(e.target).closest('a').length > 0)
       return
@@ -370,7 +380,7 @@ $(document).click(function(e) {
 
 let show_popup_key_pressed = false
 $(document).keydown(function(e) {
-  if (TransOver.modifierKeys[e.keyCode] == options.popup_show_trigger) {
+  if (TransOver.modifierKeys[e.keyCode] === options.popup_show_trigger) {
     show_popup_key_pressed = true
 
     const selection = window.getSelection().toString()
@@ -395,11 +405,6 @@ $(document).keydown(function(e) {
     }
   }
 
-  // text-to-speech on ctrl press
-  if (!e.originalEvent.repeat && TransOver.modifierKeys[e.keyCode] == options.tts_key && options.tts && $('transover-popup').length > 0) {
-    debug('tts')
-    chrome.extension.sendRequest({handler: 'tts'})
-  }
 
   // Hide tat popup on escape
   if (e.keyCode == 27) {
