@@ -472,13 +472,11 @@ chrome.runtime.onMessage.addListener(
 
     if (request == 'open_type_and_translate') {
       if ($('transover-type-and-translate-popup').length == 0) {
-        chrome.extension.sendRequest({handler: 'get_last_tat_sl_tl'}, function(response) {
-          const $popup = createPopup('transover-type-and-translate-popup')
-          $popup.attr('data-disable_on_this_page', disable_on_this_page)
-          $('body').append($popup)
-          $popup.each(function() {
-            $(this.shadowRoot.querySelector('main')).hide().fadeIn('fast')
-          })
+        const $popup = createPopup('transover-type-and-translate-popup')
+        $popup.attr('data-disable_on_this_page', disable_on_this_page)
+        $('body').append($popup)
+        $popup.each(function() {
+          $(this.shadowRoot.querySelector('main')).hide().fadeIn('fast')
         })
       }
       else {

@@ -112,13 +112,6 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
   const except_urls = Options.except_urls()
 
   switch (request.handler) {
-  case 'get_last_tat_sl_tl':
-    console.log('get_last_tat_sl_tl')
-    sendResponse({
-      last_tl: localStorage['last_tat_tl'],
-      last_sl: localStorage['last_tat_sl']
-    })
-    break
   case 'get_options':
     sendResponse({
       options: JSON.stringify({
