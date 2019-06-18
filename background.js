@@ -14,21 +14,7 @@ const s = document.getElementsByTagName('script')[0]
 s.parentNode.insertBefore(ga, s)
 
 function translate(word, sl, tl, last_translation, onresponse, sendResponse, ga_event_name) {
-  // const options = {
-  //   url: 'http://localhost/cree-dictionary/_translate_cree/'+word,
-  //   data: {
-  //     q: word,
-  //     sl: sl,
-  //     tl: tl,
-  //   },
-  //   dataType: 'json',
-  //   success: function on_success(data) {
-  //     onresponse(data, word, tl, last_translation, sendResponse, ga_event_name)
-  //   },
-  //   error: function(xhr, status, e) {
-  //     console.log({e: e, xhr: xhr})
-  //   }
-  // }
+
   const options = {
     url: 'http://sapir.artsrn.ualberta.ca/cree-dictionary/_translate-cree/'+word,
     dataType: 'json',
@@ -58,11 +44,6 @@ function figureOutSlTl(tab_lang) {
   }
 
   return res
-}
-
-function translationIsTheSameAsInput(sentences, input) {
-  input = input.replace(/^ *| *$/g, '')
-  return sentences[0].trans.match(new RegExp(TransOver.regexp_escape(input), 'i'))
 }
 
 function on_translation_response(data, word, tl, last_translation, sendResponse, ga_event_name) {
