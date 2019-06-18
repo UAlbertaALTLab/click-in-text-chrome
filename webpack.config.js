@@ -36,7 +36,7 @@ const config = {
     new CleanWebpackPlugin(['dist']),
     new CopyWebpackPlugin([
       'manifest.json',
-      '*.png',
+      'icons/*.png',
       'options.html',
       'lib/popup.html',
       'lib/tat_popup.html',
