@@ -324,7 +324,7 @@ function process(e) {
       }
 
       last_translation = translation
-      showPopup(e, TransOver.formatTranslation(translation, TransOverLanguages[response.tl].direction, response.sl, options))
+      showPopup(e, TransOver.formatTranslation(translation))
     })
   }
 }
@@ -390,7 +390,7 @@ $(document).keydown(function(e) {
 
         const xy = { clientX: last_mouse_stop.x, clientY: last_mouse_stop.y }
         last_translation = translation
-        showPopup(xy, TransOver.formatTranslation(translation, TransOverLanguages[response.tl].direction, response.sl, options))
+        showPopup(xy, TransOver.formatTranslation(translation))
       })
     }
   }
@@ -474,14 +474,6 @@ chrome.runtime.onMessage.addListener(
       if ($('transover-type-and-translate-popup').length == 0) {
         chrome.extension.sendRequest({handler: 'get_last_tat_sl_tl'}, function(response) {
           const $popup = createPopup('transover-type-and-translate-popup')
-          const languages = $.extend({}, TransOverLanguages)
-
-          if (response.sl) {
-            languages[response.sl].selected_sl = true
-          }
-          languages[response.tast_tl || options.target_lang].selected_tl = true
-
-          $popup.attr('data-languages', JSON.stringify(languages))
           $popup.attr('data-disable_on_this_page', disable_on_this_page)
           $('body').append($popup)
           $popup.each(function() {
@@ -525,7 +517,7 @@ window.addEventListener('message', function(e) {
     return
 
   if (e.data.type == 'transoverTranslate') {
-    chrome.extension.sendRequest({handler: 'translate', word: e.data.text, sl: e.data.sl, tl: e.data.tl}, function(response) {
+    chrome.extension.sendRequest({handler: 'translate', word: e.data.text}, function(response) {
       debug('tat response: ', response)
 
       const translation = TransOver.deserialize(response.translation)
@@ -537,7 +529,7 @@ window.addEventListener('message', function(e) {
 
       const e = { clientX: $(window).width(), clientY: 0 }
       last_translation = translation
-      showPopup(e, TransOver.formatTranslation(translation, TransOverLanguages[response.tl].direction, response.sl, options))
+      showPopup(e, TransOver.formatTranslation(translation))
     })
   } else if (e.data.type === 'toggle_disable_on_this_page') {
     disable_on_this_page = e.data.disable_on_this_page

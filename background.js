@@ -2,13 +2,13 @@ import Options from './lib/options'
 import TransOver from './lib/transover_utils'
 
 
-function translate(word, sl, tl, last_translation, onresponse, sendResponse) {
+function translate(word, last_translation, onresponse, sendResponse) {
 
   const options = {
     url: 'http://sapir.artsrn.ualberta.ca/cree-dictionary/_translate-cree/'+word,
     dataType: 'json',
     success: function on_success(data) {
-      onresponse(data, word, tl, last_translation, sendResponse)
+      onresponse(data, word, last_translation, sendResponse)
     },
     error: function(xhr, status, e) {
       console.log({e: e, xhr: xhr})
@@ -35,9 +35,9 @@ function figureOutSlTl(tab_lang) {
   return res
 }
 
-function on_translation_response(data, word, tl, last_translation, sendResponse) {
+function on_translation_response(data, word, last_translation, sendResponse) {
   let output
-  const translation = {tl: tl}
+  const translation = {}
 
   console.log('raw_translation: ', data)
 
@@ -64,7 +64,6 @@ function on_translation_response(data, word, tl, last_translation, sendResponse)
         output.push({pos: t.lemma + t.analysis, meanings: definition_list})
       })
     }
-    translation.sl = 'cree'
   }
 
   // if ((!data.dict && !data.sentences) || (!data.dict && translationIsTheSameAsInput(data.sentences, word))) {
@@ -142,19 +141,8 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
     console.log('received to translate: ' + request.word)
 
     chrome.tabs.detectLanguage(null, function(tab_lang) {
-      let sl, tl
-      // hack: presence of request.tl/sl means this came from popup translate
-      if (request.tl && request.sl) {
-        localStorage['last_tat_tl'] = request.tl
-        localStorage['last_tat_sl'] = request.sl
-        sl = request.sl
-        tl = request.tl
-      } else {
-        const sltl = figureOutSlTl(tab_lang)
-        sl = sltl.sl
-        tl = sltl.tl
-      }
-      translate(request.word, sl, tl, last_translation, on_translation_response, sendResponse)
+
+      translate(request.word, last_translation, on_translation_response, sendResponse)
     })
     break
   case 'tts':
