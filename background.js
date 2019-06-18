@@ -1,25 +1,14 @@
 import Options from './lib/options'
 import TransOver from './lib/transover_utils'
 
-// todo: remove this shit (google analysis)
-const _gaq = []
-_gaq.push(['_setAccount', 'UA-46863240-1'])
-_gaq.push(['_trackPageview'])
 
-const ga = document.createElement('script')
-ga.type = 'text/javascript'
-ga.async = true
-ga.src = 'https://ssl.google-analytics.com/ga.js'
-const s = document.getElementsByTagName('script')[0]
-s.parentNode.insertBefore(ga, s)
-
-function translate(word, sl, tl, last_translation, onresponse, sendResponse, ga_event_name) {
+function translate(word, sl, tl, last_translation, onresponse, sendResponse) {
 
   const options = {
     url: 'http://sapir.artsrn.ualberta.ca/cree-dictionary/_translate-cree/'+word,
     dataType: 'json',
     success: function on_success(data) {
-      onresponse(data, word, tl, last_translation, sendResponse, ga_event_name)
+      onresponse(data, word, tl, last_translation, sendResponse)
     },
     error: function(xhr, status, e) {
       console.log({e: e, xhr: xhr})
@@ -46,7 +35,7 @@ function figureOutSlTl(tab_lang) {
   return res
 }
 
-function on_translation_response(data, word, tl, last_translation, sendResponse, ga_event_name) {
+function on_translation_response(data, word, tl, last_translation, sendResponse) {
   let output
   const translation = {tl: tl}
 
@@ -113,7 +102,6 @@ function on_translation_response(data, word, tl, last_translation, sendResponse,
 
   $.extend(last_translation, translation)
 
-  _gaq.push(['_trackEvent', ga_event_name, translation.sl, translation.tl])
 
   console.log('response: ', translation)
   sendResponse(translation)
@@ -166,13 +154,12 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
         sl = sltl.sl
         tl = sltl.tl
       }
-      translate(request.word, sl, tl, last_translation, on_translation_response, sendResponse, Options.translate_by())
+      translate(request.word, sl, tl, last_translation, on_translation_response, sendResponse)
     })
     break
   case 'tts':
     if (last_translation.succeeded) {
       console.log('tts: ' + last_translation.word + ', sl: ' + last_translation.sl)
-      _gaq.push(['_trackEvent', 'tts', last_translation.sl, last_translation.tl])
 
       const msg = new SpeechSynthesisUtterance()
       msg.lang = last_translation.sl
