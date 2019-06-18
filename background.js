@@ -1,6 +1,7 @@
 import Options from './lib/options'
 import TransOver from './lib/transover_utils'
 
+// todo: remove this shit (google analysis)
 const _gaq = []
 _gaq.push(['_setAccount', 'UA-46863240-1'])
 _gaq.push(['_trackPageview'])
