@@ -1,6 +1,7 @@
 const path = require('path')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
+let webpack = require('webpack');
 
 const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development'
 
@@ -12,7 +13,8 @@ const config = {
     contentscript: './contentscript.js',
     options_script: './lib/options_script.js',
     tat_popup: './lib/tat_popup.js',
-    popup: './lib/popup.js'
+    popup: './lib/popup.js',
+    test: './test.js'
   },
   output: {
     filename: '[name].js',
@@ -22,7 +24,7 @@ const config = {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        exclude: [/node_modules/],
         use: {
           loader: 'babel-loader',
           options: {
@@ -32,18 +34,24 @@ const config = {
       }
     ]
   },
+
   plugins: [
     new CleanWebpackPlugin(['dist']),
     new CopyWebpackPlugin([
       'manifest.json',
       'icons/*.png',
+      'test.html',
       'options.html',
       'lib/popup.html',
       'lib/tat_popup.html',
-      'node_modules/jquery/dist/jquery.min.js',
       'node_modules/xregexp/xregexp-all.js'
-    ], {to: 'dist'})
-  ]
+    ], {to: 'dist'}),
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery'
+    }) // this makes $ and jQuery globally recognizable and automatically packed in this project. (FYI, this setup by default looks for 'jquery' in node_modules)
+  ],
+
 }
 
 module.exports = config

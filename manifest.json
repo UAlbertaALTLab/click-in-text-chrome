@@ -5,7 +5,6 @@
   "icons": { "16": "./icons/to_16.png", "48": "./icons/to_48.png", "128": "./icons/to_128.png" },
   "description": "Hover, click or select to translate (with text-to-speech). Translator.",
   "background": { "scripts": [
-      "jquery.min.js",
       "xregexp-all.js",
       "background.js"
     ]
@@ -15,7 +14,6 @@
     "matches": [ "<all_urls>" ],
     "all_frames": true,
     "js": [
-      "jquery.min.js",
       "xregexp-all.js",
       "contentscript.js"
     ]

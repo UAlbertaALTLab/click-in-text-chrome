@@ -1,46 +1,25 @@
 import TransOver from './lib/transover_utils'
+import Core from './lib/transover_core'
 const debug = require('debug')('transover')
+
 
 let options
 let disable_on_this_page
 
-function copyToClipboard(text) {
-  const input = document.createElement('input')
-  input.style.position = 'fixed'
-  input.style.opacity = 0
-  input.value = text
-  document.body.appendChild(input)
-  input.select()
-  document.execCommand('copy')
-  document.body.removeChild(input)
-}
-
-function ignoreThisPage(options) {
-  const isBlacklisted = $.grep(options.except_urls, function(url) { return RegExp(url).test(window.location.href) }).length > 0
-  const isWhitelisted = $.grep(options.only_urls, function(url) { return RegExp(url).test(window.location.href) }).length > 0 ||
-    options.only_urls.length === 0
-  return isBlacklisted || !isWhitelisted
-}
-
-function createPopup(nodeType) {
-  document.documentElement.appendChild(templates[templateIds[nodeType]])
-  return $('<'+nodeType+'>')
-}
-
-function removePopup(nodeType) {
-  $(nodeType).each(function() {
-    const self = this
-    $(this.shadowRoot.querySelector('main')).fadeOut('fast', function() { self.remove() })
-  })
-  $('#'+templateIds[nodeType]).remove()
-}
 
 const templates = {}
-const templateIds = {
-  'transover-popup': 'transover-popup-template',
-  'transover-type-and-translate-popup': 'transover-tat-popup-template'
-}
 
+
+/**
+ * This is run twice upon loading of any tabs. It attaches the scripts our popup html needs to the head of current html.
+ *
+ * It also saves popup html as objects for future use and modification.
+ *
+ * By how chrome plugin works, all the extension javascript and html files are in different context (different from user
+ * opened web-pages). Chrome API getURL is needed to access them
+ *
+ * @param component
+ */
 function registerTransoverComponent(component) {
   const html = component + '.html'
   const script = component + '.js'
@@ -64,9 +43,9 @@ function registerTransoverComponent(component) {
 
 let last_translation
 function showPopup(e, content) {
-  removePopup('transover-type-and-translate-popup')
+  Core.removePopup('transover-type-and-translate-popup')
 
-  const $popup = createPopup('transover-popup')
+  const $popup = Core.createPopup('transover-popup', templates[Core.templateIds['transover-popup']])
   $('body').append($popup)
 
   $popup.on('transover-popup_content_updated', function() {
@@ -129,7 +108,7 @@ function calculatePosition(x, y, $popup) {
 
 chrome.extension.sendRequest({handler: 'get_options'}, function(response) {
   options = JSON.parse( response.options )
-  disable_on_this_page = ignoreThisPage(options)
+  disable_on_this_page = Core.ignoreThisPage(options)
   chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
 })
 
@@ -137,7 +116,7 @@ document.addEventListener('visibilitychange', function () {
   if (!document.hidden) {
     chrome.extension.sendRequest({handler: 'get_options'}, function(response) {
       options = JSON.parse( response.options )
-      disable_on_this_page = ignoreThisPage(options)
+      disable_on_this_page = Core.ignoreThisPage(options)
       chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
 
     })
@@ -408,7 +387,7 @@ $(document).keydown(function(e) {
 
   // Hide tat popup on escape
   if (e.keyCode == 27) {
-    removePopup('transover-type-and-translate-popup')
+    Core.removePopup('transover-type-and-translate-popup')
   }
 }).keyup(function(e) {
   if (TransOver.modifierKeys[e.keyCode] == options.popup_show_trigger) {
@@ -439,12 +418,12 @@ let timer25
 const last_mouse_stop = {x: 0, y: 0}
 
 $(document).scroll(function() {
-  removePopup('transover-popup')
+  Core.removePopup('transover-popup')
 })
 
 // setup mousestop event
 $(document).on('mousemove_without_noise', function(e){
-  removePopup('transover-popup')
+  Core.removePopup('transover-popup')
 
   clearTimeout(timer25)
 
@@ -477,7 +456,7 @@ chrome.runtime.onMessage.addListener(
 
     if (request == 'open_type_and_translate') {
       if ($('transover-type-and-translate-popup').length == 0) {
-        const $popup = createPopup('transover-type-and-translate-popup')
+        const $popup = Core.createPopup('transover-type-and-translate-popup', templates[Core.templateIds['transover-type-and-translate-popup']])
         $popup.attr('data-disable_on_this_page', disable_on_this_page)
         $('body').append($popup)
         $popup.each(function() {
@@ -485,7 +464,7 @@ chrome.runtime.onMessage.addListener(
         })
       }
       else {
-        removePopup('transover-type-and-translate-popup')
+        Core.removePopup('transover-type-and-translate-popup')
       }
     } else if (request == 'copy-translation-to-clipboard') {
       debug('received copy-translation-to-clipboard')
@@ -503,7 +482,7 @@ chrome.runtime.onMessage.addListener(
         } else {
           toClipboard = last_translation
         }
-        copyToClipboard(toClipboard)
+        Core.copyToClipboard(toClipboard)
       }
     }
   }
@@ -542,8 +521,8 @@ window.addEventListener('message', function(e) {
       current_url: window.location.origin
     })
     chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
-    removePopup('transover-type-and-translate-popup')
+    Core.removePopup('transover-type-and-translate-popup')
   } else if (e.data.type === 'tat_close') {
-    removePopup('transover-type-and-translate-popup')
+    Core.removePopup('transover-type-and-translate-popup')
   }
 })

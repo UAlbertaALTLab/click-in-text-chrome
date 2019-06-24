@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "NODE_ENV=production webpack && zip -FS -r -j translate_onhover dist",
+    "build": "NODE_ENV=production webpack && cd dist && zip -FS -r ../translate_onhover ./* -x test.html test.js",
     "dev": "webpack --watch",
     "lint": "eslint --ignore-pattern dist ."
   },
@@ -10,7 +10,9 @@
     "babel-loader": "^8.0.5",
     "clean-webpack-plugin": "^1.0.0",
     "copy-webpack-plugin": "^4.6.0",
+    "cypress": "^3.3.1",
     "eslint": "^5.11.0",
+    "eslint-plugin-cypress": "^2.2.1",
     "webpack": "^4.28.2",
     "webpack-cli": "^3.1.2"
   },

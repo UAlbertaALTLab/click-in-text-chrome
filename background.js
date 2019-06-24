@@ -1,65 +1,6 @@
 import Options from './lib/options'
+import Core from './lib/transover_core'
 
-
-// where translate api happens
-function translate(word, onresponse, sendResponse) {
-
-  const options = {
-    url: 'http://sapir.artsrn.ualberta.ca/cree-dictionary/_translate-cree/'+word,
-    dataType: 'json',
-    success: function on_success(data) {
-      onresponse(data, word, sendResponse)
-    },
-    error: function(xhr, status, e) {
-      console.log({e: e, xhr: xhr})
-    }
-  }
-  $.ajax(options)
-}
-
-function on_translation_response(data, word, sendResponse) {
-  let output
-  const translation = {}
-
-  console.log('raw_translation: ', data)
-
-  if (!data.translation || data.translation.length === 0) {
-    translation.succeeded = false
-    if (Options.do_not_show_oops()) {
-      output = ''
-    } else {
-      output = 'Oops.. No translation found.'
-    }
-  } else{
-    translation.succeeded = true
-    translation.word = word
-    output = []
-    if (data.translation) { // full translation
-      data.translation.forEach(function (t) {
-
-        const definition_list = []
-
-        t.definitions.forEach(function (dic) {
-          definition_list.push(dic.definition +'; ' +  dic.source)
-        }
-        )
-        output.push({pos: t.lemma + t.analysis, meanings: definition_list})
-      })
-    }
-  }
-
-  if (!( output instanceof String)) {
-    output = JSON.stringify(output)
-  }
-
-  translation.translation = output
-
-  $.extend( translation)
-
-
-  console.log('response: ', translation)
-  sendResponse(translation)
-}
 
 
 
@@ -82,10 +23,10 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
     break
   case 'translate':
     console.log('received to translate: ' + request.word)
-    translate(request.word, on_translation_response, sendResponse)
+    Core.callAPI(request.word, Core.parseAPIResponse, sendResponse)
     break
   case 'setIcon':
-    chrome.browserAction.setIcon({path: request.disabled ? 'to_bw_38.png' : 'to_38.png'})
+    chrome.browserAction.setIcon({path: request.disabled ? 'icons/to_bw_38.png' : 'icons/to_38.png'})
     break
   case 'toggle_disable_on_this_page':
     if (request.disable_on_this_page) {
