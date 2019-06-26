@@ -55,7 +55,7 @@ reload the directory `./dist` as a chrome plugin.
 
 6. (Optional) Manual Testing: Go to any new tab or reload an existing tab to see the changes you just made.
 
-7. (Optional) Automatic Testing: `npm test` to run cypress testing. (Doesn't require step 5. It uses `test.js`, as explained earlier [here](#why `test.js`))
+7. (Optional) Automatic Testing: `npm test` to run cypress testing. (Doesn't require step 5. It uses `test.js`, as explained earlier [here](#why-testjs))
 
 8. Go back to 4. Do more stuff to the code
 
@@ -67,7 +67,7 @@ Pro tips/Notes:
 - You can `npx cypress open` and do everything in cypress built-in chrome. Everything will be the same plus at Step 7 You can use
 cypress testing UI and make everything faster by omitting the need to start a browser.
 
-- As explained earlier [here](#why-test.js). Cypress test at Step 7 tests the browser invariant version of the extension
+- As explained earlier [here](#why-testjs). Cypress test at Step 7 tests the browser invariant version of the extension
  provided by `test.js`. Not the extension you loaded at step 2 and 3. Depending on the consistency between `test.js` and browser API behaviors. Cypress may go through a 
  different user experience than what a real user would go through via a browser extension. 
  You may want to do manual testing at step 6 now and then to really find out.
