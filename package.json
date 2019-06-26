@@ -2,6 +2,7 @@
   "scripts": {
     "build": "NODE_ENV=production webpack && cd dist && zip -FS -r ../translate_onhover ./* -x test.html test.js",
     "dev": "webpack --watch",
+    "test": "npx http-server dist & npx wait-on http-get://localhost:8080 && npx cypress run",
     "lint": "eslint --ignore-pattern dist ."
   },
   "devDependencies": {
@@ -15,6 +16,7 @@
     "eslint-plugin-cypress": "^2.2.1",
     "http-server": "^0.11.1",
     "npx": "^10.2.0",
+    "wait-on": "^3.2.0",
     "webpack": "^4.28.2",
     "webpack-cli": "^3.1.2"
   },
