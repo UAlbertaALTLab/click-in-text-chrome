@@ -9,16 +9,18 @@ const debug = require('debug')('transover')
 let disable_on_this_page
 
 
+
 const getURL = chrome.extension.getURL
-const loadOptions = () =>
+const loadAndApplyOptions = () =>
 {
   let options = {}
 
-  chrome.runtime.sendMessage({handler: 'get_options'}, function (response) {
+  chrome.runtime.sendMessage({handler: 'get_options'},    function (response) {
     options = JSON.parse(response.options)
     disable_on_this_page = Core.ignoreThisPage(options)
-    chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
-  })
+    chrome.runtime.sendMessage({handler: 'setIcon', disabled: disable_on_this_page})
+  } )
+
 
 
   // chrome.extension.sendRequest({handler: 'get_options'}, function (response) {
@@ -38,12 +40,10 @@ const loadOptions = () =>
 // }
 
 
-console.log("yip")
-Core.loadAndApplyUserOptions(loadOptions)
-Core.reloadAndApplyOptionsOnTabSwitch(loadOptions)
-console.log("yep")
+Core.loadAndApplyUserOptions(loadAndApplyOptions)
+Core.reloadAndApplyOptionsOnTabSwitch(loadAndApplyOptions)
 Core.startNoiselessMouseMovementsListening()
-console.log('nice')
+
 //
 // // Load user options
 // // decide whether to turn icon into black and white when the user loads a tab
@@ -251,7 +251,7 @@ function process(e) {
     //   showPopup(e, TransOver.formatTranslation(translation))
     // })
 
-    chrome.extension.sendRequest({handler: 'translate', word: word}, function (response) {
+    chrome.runtime.sendMessage({handler: 'translate', word: word}, function (response) {
       debug('response: ', response)
 
       const translation = TransOver.deserialize(response.translation)
@@ -376,9 +376,11 @@ $(document).scroll(function () {
 })
 
 chrome.runtime.onMessage.addListener(
+
   function (request) {
     if (window != window.top) return
 
+    console.log('place3')
     if (request == 'open_type_and_translate') {
       if ($('transover-type-and-translate-popup').length == 0) {
         const $popup = Core.createPopup('transover-type-and-translate-popup', Core.templates[Core.templateIds['transover-type-and-translate-popup']])
@@ -418,16 +420,20 @@ $(function () {
 })
 
 window.addEventListener('message', function (e) {
+  console.log('place2')
+  console.log(e.source)
+  console.log(e.data.type)
   // We only accept messages from ourselves
   if (e.source != window)
     return
 
   if (e.data.type == 'transoverTranslate') {
-    chrome.extension.sendRequest({handler: 'translate', word: e.data.text}, function (response) {
+    chrome.runtime.sendMessage({handler: 'translate', word: e.data.text}, function (response) {
       debug('tat response: ', response)
-
+      console.log('lmao')
+      console.log(response)
       const translation = TransOver.deserialize(response.translation)
-
+      console.log('shit')
       if (!translation) {
         debug('tat skipping empty translation')
         return
