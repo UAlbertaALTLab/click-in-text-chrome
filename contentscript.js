@@ -1,127 +1,74 @@
+// Chrome runs contentscript.js whenever the user creates a tab. Contentscript.js has the same context as the opened tab
+// meaning it can manipulate web content.
+
 import TransOver from './lib/transover_utils'
 import Core from './lib/transover_core'
+
 const debug = require('debug')('transover')
 
-
-let options
 let disable_on_this_page
 
 
-const templates = {}
+const getURL = chrome.extension.getURL
+const loadOptions = () =>
+{
+  let options = {}
+
+  chrome.runtime.sendMessage({handler: 'get_options'}, function (response) {
+    options = JSON.parse(response.options)
+    disable_on_this_page = Core.ignoreThisPage(options)
+    chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
+  })
 
 
-/**
- * This is run twice upon loading of any tabs. It attaches the scripts our popup html needs to the head of current html.
- *
- * It also saves popup html as objects for future use and modification.
- *
- * By how chrome plugin works, all the extension javascript and html files are in different context (different from user
- * opened web-pages). Chrome API getURL is needed to access them
- *
- * @param component
- */
-function registerTransoverComponent(component) {
-  const html = component + '.html'
-  const script = component + '.js'
+  // chrome.extension.sendRequest({handler: 'get_options'}, function (response) {
+  //   options = JSON.parse(response.options)
+  //   disable_on_this_page = Core.ignoreThisPage(options)
+  //   chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
+  // })
 
-  const xhr = new XMLHttpRequest()
-  xhr.open('GET', chrome.extension.getURL(html), true)
-  xhr.responseType = 'document'
-  xhr.onload = function(e) {
-    const doc = e.target.response
-    const template = doc.querySelector('template')
-    templates[template.id] = template
-  }
-  xhr.send()
-
-  const s = document.createElement('script')
-  s.type = 'text/javascript'
-  s.src = chrome.extension.getURL(script)
-  s.async = true
-  document.head.appendChild(s)
+  return options
 }
+
+//
+// const applyOptions = (options) =>
+// {
+//   disable_on_this_page = Core.ignoreThisPage(options)
+//   chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
+// }
+
+
+console.log("yip")
+Core.loadAndApplyUserOptions(loadOptions)
+Core.reloadAndApplyOptionsOnTabSwitch(loadOptions)
+console.log("yep")
+Core.startNoiselessMouseMovementsListening()
+console.log('nice')
+//
+// // Load user options
+// // decide whether to turn icon into black and white when the user loads a tab
+// chrome.extension.sendRequest({handler: 'get_options'}, function (response) {
+//   options = JSON.parse(response.options)
+//   disable_on_this_page = Core.ignoreThisPage(options)
+//   chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
+// })
+//
+//
+// // Load user options
+// // decide whether to turn icon into black and white whenever the user switches tabs
+// //"The visibilitychange event is fired when the content of a tab has become visible or has been hidden."
+// document.addEventListener('visibilitychange', function () {
+//   if (!document.hidden) {
+//     chrome.extension.sendRequest({handler: 'get_options'}, function (response) {
+//       options = JSON.parse(response.options)
+//       disable_on_this_page = Core.ignoreThisPage(options)
+//       chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
+//
+//     })
+//   }
+// }, false)
 
 let last_translation
-function showPopup(e, content) {
-  Core.removePopup('transover-type-and-translate-popup')
-
-  const $popup = Core.createPopup('transover-popup', templates[Core.templateIds['transover-popup']])
-  $('body').append($popup)
-
-  $popup.on('transover-popup_content_updated', function() {
-    const pos = calculatePosition(e.clientX, e.clientY, $popup)
-    $popup
-      .each(function() {
-        $(this.shadowRoot.querySelector('main')).hide()
-      })
-      .attr({ top: pos.y, left: pos.x })
-      .each(function() {
-        $(this.shadowRoot.querySelector('main')).fadeIn('fast')
-      })
-  })
-  $popup.attr('content', content)
-}
-
-function calculatePosition(x, y, $popup) {
-  const pos = {}
-  const margin = 5
-  const anchor = 10
-  const outerWidth = Number($popup.attr('outer-width'))
-  const outerHeight = Number($popup.attr('outer-height'))
-
-  // show popup to the right of the word if it fits into window this way
-  if (x + anchor + outerWidth + margin < $(window).width()) {
-    pos.x = x + anchor
-  }
-  // show popup to the left of the word if it fits into window this way
-  else if (x - anchor - outerWidth - margin > 0) {
-    pos.x = x - anchor - outerWidth
-  }
-  // show popup at the very left if it is not wider than window
-  else if (outerWidth + margin*2 < $(window).width()) {
-    pos.x = margin
-  }
-  // resize popup width to fit into window and position it the very left of the window
-  else {
-    const non_content_x = outerWidth - Number($popup.attr('content-width'))
-
-    $popup.attr('content-width', $(window).width() - margin*2 - non_content_x )
-    $popup.attr('content-height', Number($popup.attr('content-height')) + 4)
-    pos.x = margin
-  }
-
-  // show popup above the word if it fits into window this way
-  if (y - anchor - outerHeight - margin > 0) {
-    pos.y = y - anchor - outerHeight
-  }
-  // show popup below the word if it fits into window this way
-  else if (y + anchor + outerHeight + margin < $(window).height()) {
-    pos.y = y + anchor
-  }
-  // show popup at the very top of the window
-  else {
-    pos.y = margin
-  }
-
-  return pos
-}
-
-chrome.extension.sendRequest({handler: 'get_options'}, function(response) {
-  options = JSON.parse( response.options )
-  disable_on_this_page = Core.ignoreThisPage(options)
-  chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
-})
-
-document.addEventListener('visibilitychange', function () {
-  if (!document.hidden) {
-    chrome.extension.sendRequest({handler: 'get_options'}, function(response) {
-      options = JSON.parse( response.options )
-      disable_on_this_page = Core.ignoreThisPage(options)
-      chrome.extension.sendRequest({handler: 'setIcon', disabled: disable_on_this_page})
-
-    })
-  }
-}, false)
 
 function process(e) {
 
@@ -130,7 +77,7 @@ function process(e) {
     function restorable(node, do_stuff) {
       $(node).wrap('<transwrapper />')
       const res = do_stuff(node)
-      $('transwrapper').replaceWith(TransOver.escape_html( $('transwrapper').text() ))
+      $('transwrapper').replaceWith(TransOver.escape_html($('transwrapper').text()))
       return res
     }
 
@@ -159,8 +106,8 @@ function process(e) {
       'font-family': hit_elem.css('font-family')
     }
 
-    const text_nodes = hit_elem.contents().filter(function(){
-      return this.nodeType == Node.TEXT_NODE && XRegExp(word_re).test( this.nodeValue )
+    const text_nodes = hit_elem.contents().filter(function () {
+      return this.nodeType == Node.TEXT_NODE && XRegExp(word_re).test(this.nodeValue)
     })
 
     if (text_nodes.length == 0) {
@@ -174,16 +121,16 @@ function process(e) {
       return ''
     }
 
-    const hit_word = restorable(hit_text_node, function() {
+    const hit_word = restorable(hit_text_node, function () {
       let hw = ''
 
       function getHitText(node, parent_font_style) {
         debug('getHitText: \'' + node.textContent + '\'')
 
-        if (XRegExp(word_re).test( node.textContent )) {
-          $(node).replaceWith(function() {
-            return this.textContent.replace(XRegExp('^(.{'+Math.round( node.textContent.length/2 )+'}(?:\\p{L}|[\'’](?=\\p{L}))*)(.*)', 's'), function($0, $1, $2) {
-              return '<transblock>'+TransOver.escape_html($1)+'</transblock><transblock>'+TransOver.escape_html($2)+'</transblock>'
+        if (XRegExp(word_re).test(node.textContent)) {
+          $(node).replaceWith(function () {
+            return this.textContent.replace(XRegExp('^(.{' + Math.round(node.textContent.length / 2) + '}(?:\\p{L}|[\'’](?=\\p{L}))*)(.*)', 's'), function ($0, $1, $2) {
+              return '<transblock>' + TransOver.escape_html($1) + '</transblock><transblock>' + TransOver.escape_html($2) + '</transblock>'
             })
           })
 
@@ -193,12 +140,10 @@ function process(e) {
 
           if (next_node.textContent == node.textContent) {
             return next_node
-          }
-          else {
+          } else {
             return getHitText(next_node, parent_font_style)
           }
-        }
-        else {
+        } else {
           return null
         }
       }
@@ -207,13 +152,17 @@ function process(e) {
 
       if (minimal_text_node) {
         //wrap words inside text node into <transover> element
-        $(minimal_text_node).replaceWith(function() {
-          return this.textContent.replace(XRegExp('(<|>|&|'+word_re+')', 'gs'), function ($0, $1) {
+        $(minimal_text_node).replaceWith(function () {
+          return this.textContent.replace(XRegExp('(<|>|&|' + word_re + ')', 'gs'), function ($0, $1) {
             switch ($1) {
-            case '<': return '&lt;'
-            case '>': return '&gt;'
-            case '&': return '&amp;'
-            default: return '<transover>'+$1+'</transover>'
+            case '<':
+              return '&lt;'
+            case '>':
+              return '&gt;'
+            case '&':
+              return '&amp;'
+            default:
+              return '<transover>' + $1 + '</transover>'
             }
           })
         })
@@ -226,10 +175,9 @@ function process(e) {
         //no word under cursor? we are done
         if (hit_word_elem.nodeName != 'TRANSOVER') {
           debug('missed!')
-        }
-        else  {
+        } else {
           hw = $(hit_word_elem).text()
-          debug('got it: \''+hw+'\'')
+          debug('got it: \'' + hw + '\'')
         }
       }
 
@@ -248,8 +196,10 @@ function process(e) {
   }
 
   //skip inputs and editable divs
-  if (/INPUT|TEXTAREA/.test( hit_elem.nodeName ) || hit_elem.isContentEditable
-      || $(hit_elem).parents().filter(function() { return this.isContentEditable }).length > 0) {
+  if (/INPUT|TEXTAREA/.test(hit_elem.nodeName) || hit_elem.isContentEditable
+    || $(hit_elem).parents().filter(function () {
+      return this.isContentEditable
+    }).length > 0) {
 
     return
   }
@@ -257,7 +207,7 @@ function process(e) {
   let word = ''
   if (selection.toString()) {
 
-    if (options.selection_key_only) {
+    if (Core.options.selection_key_only) {
       debug('Skip because "selection_key_only"')
       return
     }
@@ -271,21 +221,19 @@ function process(e) {
     }
 
     if (
-    // only choose selection if mouse stopped within immediate parent of selection
-      ( $(hit_elem).is(sel_container) || $.contains(sel_container, hit_elem) )
-        // and since it can still be quite a large area
-        // narrow it down by only choosing selection if mouse points at the element that is (partially) inside selection
-        && selection.containsNode(hit_elem, true)
-        // But what is the point for the first part of condition? Well, without it, pointing at body for instance would also satisfy the second part
-        // resulting in selection translation showing up in random places
+      // only choose selection if mouse stopped within immediate parent of selection
+      ($(hit_elem).is(sel_container) || $.contains(sel_container, hit_elem))
+      // and since it can still be quite a large area
+      // narrow it down by only choosing selection if mouse points at the element that is (partially) inside selection
+      && selection.containsNode(hit_elem, true)
+    // But what is the point for the first part of condition? Well, without it, pointing at body for instance would also satisfy the second part
+    // resulting in selection translation showing up in random places
     ) {
       word = selection.toString()
-    }
-    else if (options.translate_by == 'point') {
+    } else if (Core.options.translate_by == 'point') {
       word = getHitWord(e)
     }
-  }
-  else {
+  } else {
     word = getHitWord(e)
   }
   if (word != '') {
@@ -303,7 +251,7 @@ function process(e) {
     //   showPopup(e, TransOver.formatTranslation(translation))
     // })
 
-    chrome.extension.sendRequest({handler: 'translate', word: word}, function(response) {
+    chrome.extension.sendRequest({handler: 'translate', word: word}, function (response) {
       debug('response: ', response)
 
       const translation = TransOver.deserialize(response.translation)
@@ -314,14 +262,14 @@ function process(e) {
       }
 
       last_translation = translation
-      showPopup(e, TransOver.formatTranslation(translation))
+      Core.showPopup(e, TransOver.formatTranslation(translation))
     })
   }
 }
 
 function withOptionsSatisfied(e, do_stuff) {
   //respect 'translate only when alt pressed' option
-  if (options.word_key_only && !show_popup_key_pressed) return
+  if (Core.options.word_key_only && !show_popup_key_pressed) return
 
   //respect "don't translate these sites"
   if (disable_on_this_page) return
@@ -330,24 +278,24 @@ function withOptionsSatisfied(e, do_stuff) {
 
 }
 
-$(document).on('mousestop', function(e) {
-  withOptionsSatisfied(e, function() {
+$(document).on('mousestop', function (e) {
+  withOptionsSatisfied(e, function () {
     // translate selection unless 'translate selection on alt only' is set
     if (window.getSelection().toString()) {
-      if (!options.selection_key_only) {
+      if (!Core.options.selection_key_only) {
         process(e)
       }
     } else {
-      if (options.translate_by === 'point') {
+      if (Core.options.translate_by === 'point') {
         process(e)
       }
     }
   })
 })
 
-$(document).click(function(e) {
-  withOptionsSatisfied(e, function() {
-    if (options.translate_by !== 'click')
+$(document).click(function (e) {
+  withOptionsSatisfied(e, function () {
+    if (Core.options.translate_by !== 'click')
       return
     if ($(e.target).closest('a').length > 0)
       return
@@ -358,16 +306,16 @@ $(document).click(function(e) {
 })
 
 let show_popup_key_pressed = false
-$(document).keydown(function(e) {
-  if (TransOver.modifierKeys[e.keyCode] === options.popup_show_trigger) {
+$(document).keydown(function (e) {
+  if (TransOver.modifierKeys[e.keyCode] === Core.options.popup_show_trigger) {
     show_popup_key_pressed = true
 
     const selection = window.getSelection().toString()
 
-    if (options.selection_key_only && selection) {
+    if (Core.options.selection_key_only && selection) {
       debug('Got selection_key_only')
 
-      chrome.extension.sendRequest({handler: 'translate', word: selection}, function(response) {
+      chrome.extension.sendRequest({handler: 'translate', word: selection}, function (response) {
         debug('response: ', response)
 
         const translation = TransOver.deserialize(response.translation)
@@ -377,9 +325,9 @@ $(document).keydown(function(e) {
           return
         }
 
-        const xy = { clientX: last_mouse_stop.x, clientY: last_mouse_stop.y }
+        const xy = {clientX: Core.last_mouse_stop.x, clientY: Core.last_mouse_stop.y}
         last_translation = translation
-        showPopup(xy, TransOver.formatTranslation(translation))
+        Core.showPopup(xy, TransOver.formatTranslation(translation))
       })
     }
   }
@@ -389,81 +337,57 @@ $(document).keydown(function(e) {
   if (e.keyCode == 27) {
     Core.removePopup('transover-type-and-translate-popup')
   }
-}).keyup(function(e) {
-  if (TransOver.modifierKeys[e.keyCode] == options.popup_show_trigger) {
+}).keyup(function (e) {
+  if (TransOver.modifierKeys[e.keyCode] == Core.options.popup_show_trigger) {
     show_popup_key_pressed = false
   }
 })
 
 function hasMouseReallyMoved(e) { //or is it a tremor?
-  const left_boundry = parseInt(last_mouse_stop.x) - 5,
-    right_boundry  = parseInt(last_mouse_stop.x) + 5,
-    top_boundry    = parseInt(last_mouse_stop.y) - 5,
-    bottom_boundry = parseInt(last_mouse_stop.y) + 5
+  const left_boundry = parseInt(Core.last_mouse_stop.x) - 5,
+    right_boundry = parseInt(Core.last_mouse_stop.x) + 5,
+    top_boundry = parseInt(Core.last_mouse_stop.y) - 5,
+    bottom_boundry = parseInt(Core.last_mouse_stop.y) + 5
 
   return e.clientX > right_boundry || e.clientX < left_boundry || e.clientY > bottom_boundry || e.clientY < top_boundry
 }
 
-$(document).mousemove(function(e) {
-  if (hasMouseReallyMoved(e)) {
-    const mousemove_without_noise = new $.Event('mousemove_without_noise')
-    mousemove_without_noise.clientX = e.clientX
-    mousemove_without_noise.clientY = e.clientY
 
-    $(document).trigger(mousemove_without_noise)
-  }
-})
+$(document).mousemove(
 
-let timer25
-const last_mouse_stop = {x: 0, y: 0}
+  /**
+   * check if it's just a small tremor. If it's not a tremor, fire a 'mousemove_without_noise' with attributes 'clientX' 'clientY'
+   */
+  function (e) {
+    if (hasMouseReallyMoved(e)) {
+      const mousemove_without_noise = new $.Event('mousemove_without_noise')
+      mousemove_without_noise.clientX = e.clientX
+      mousemove_without_noise.clientY = e.clientY
 
-$(document).scroll(function() {
-  Core.removePopup('transover-popup')
-})
-
-// setup mousestop event
-$(document).on('mousemove_without_noise', function(e){
-  Core.removePopup('transover-popup')
-
-  clearTimeout(timer25)
-
-  if (options) {
-    let delay = options.delay
-
-    if (window.getSelection().toString()) {
-      if (options.selection_key_only) {
-        delay = 200
-      }
-    } else {
-      if (options.word_key_only) {
-        delay = 200
-      }
+      $(document).trigger(mousemove_without_noise)
     }
+  })
 
-    timer25 = setTimeout(function() {
-      const mousestop = new $.Event('mousestop')
-      last_mouse_stop.x = mousestop.clientX = e.clientX
-      last_mouse_stop.y = mousestop.clientY = e.clientY
 
-      $(document).trigger(mousestop)
-    }, delay)
-  }
+
+
+$(document).scroll(function () {
+  Core.removePopup('transover-popup')
 })
 
 chrome.runtime.onMessage.addListener(
-  function(request) {
+  function (request) {
     if (window != window.top) return
 
     if (request == 'open_type_and_translate') {
       if ($('transover-type-and-translate-popup').length == 0) {
-        const $popup = Core.createPopup('transover-type-and-translate-popup', templates[Core.templateIds['transover-type-and-translate-popup']])
+        const $popup = Core.createPopup('transover-type-and-translate-popup', Core.templates[Core.templateIds['transover-type-and-translate-popup']])
         $popup.attr('data-disable_on_this_page', disable_on_this_page)
         $('body').append($popup)
-        $popup.each(function() {
+        $popup.each(function () {
           $(this.shadowRoot.querySelector('main')).hide().fadeIn('fast')
         })
-      }
-      else {
+      } else {
         Core.removePopup('transover-type-and-translate-popup')
       }
     } else if (request == 'copy-translation-to-clipboard') {
@@ -476,7 +400,7 @@ chrome.runtime.onMessage.addListener(
             if (t.pos) {
               line = t.pos + ': '
             }
-            line = line + t.meanings.slice(0,5).join(', ')
+            line = line + t.meanings.slice(0, 5).join(', ')
             return line
           }).join('; ')
         } else {
@@ -488,18 +412,18 @@ chrome.runtime.onMessage.addListener(
   }
 )
 
-$(function() {
-  registerTransoverComponent('popup')
-  registerTransoverComponent('tat_popup')
+$(function () {
+  Core.registerTransoverComponent('popup', getURL)
+  Core.registerTransoverComponent('tat_popup', getURL)
 })
 
-window.addEventListener('message', function(e) {
+window.addEventListener('message', function (e) {
   // We only accept messages from ourselves
   if (e.source != window)
     return
 
   if (e.data.type == 'transoverTranslate') {
-    chrome.extension.sendRequest({handler: 'translate', word: e.data.text}, function(response) {
+    chrome.extension.sendRequest({handler: 'translate', word: e.data.text}, function (response) {
       debug('tat response: ', response)
 
       const translation = TransOver.deserialize(response.translation)
@@ -509,9 +433,9 @@ window.addEventListener('message', function(e) {
         return
       }
 
-      const e = { clientX: $(window).width(), clientY: 0 }
+      const e = {clientX: $(window).width(), clientY: 0}
       last_translation = translation
-      showPopup(e, TransOver.formatTranslation(translation))
+      Core.showPopup(e, TransOver.formatTranslation(translation))
     })
   } else if (e.data.type === 'toggle_disable_on_this_page') {
     disable_on_this_page = e.data.disable_on_this_page
