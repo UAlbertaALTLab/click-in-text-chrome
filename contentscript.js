@@ -24,275 +24,40 @@ const loadAndApplyOptions = () =>
   return options
 }
 
+const asyncGetTranslation = (word, callback) =>{
+  chrome.runtime.sendMessage({handler:'translate', word:word}, callback)
+}
+
+const getTranslationCallback = (response) => {
+  return TransOver.deserialize(response.translation)
+}
+
+// chrome.runtime.sendMessage({handler: 'translate', word: word}, function (response) {
+//   // debug('response: ', response)
+//
+//   const translation = TransOver.deserialize(response.translation)
+//   console.log(translation)
+//
+//   if (!translation) {
+//     // debug('skipping empty translation')
+//     return
+//   }
+//
+//   Core.last_translation = translation
+//   Core.showPopup(e, TransOver.formatTranslation(translation))
+// })
 
 
 Core.loadAndApplyUserOptions(loadAndApplyOptions)
 Core.reloadAndApplyOptionsOnTabSwitch(loadAndApplyOptions)
 Core.startNoiselessMouseMovementsListening()
 Core.startKeyPressListening()
+Core.startMouseStopHandling(asyncGetTranslation, getTranslationCallback)
+Core.startClickHandling(asyncGetTranslation, getTranslationCallback)
+Core.startMouseMoveHandling()
 
+Core.removePopupUponScrolling()
 
-/**
- * This function extracts the word under cursor and shows the popup.
- * @param e
- */
-function process(e) {
-
-  function getHitWord(e) {
-
-    function restorable(node, do_stuff) {
-      $(node).wrap('<transwrapper />')
-      const res = do_stuff(node)
-      $('transwrapper').replaceWith(TransOver.escape_html($('transwrapper').text()))
-      return res
-    }
-
-    function getExactTextNode(nodes, e) {
-      $(text_nodes).wrap('<transblock />')
-      let hit_text_node = document.elementFromPoint(e.clientX, e.clientY)
-
-      //means we hit between the lines
-      if (hit_text_node.nodeName != 'TRANSBLOCK') {
-        $(text_nodes).unwrap()
-        return null
-      }
-
-      hit_text_node = hit_text_node.childNodes[0]
-
-      $(text_nodes).unwrap()
-
-      return hit_text_node
-    }
-
-    const hit_elem = $(document.elementFromPoint(e.clientX, e.clientY))
-    const word_re = '\\p{L}+(?:[\'’]\\p{L}+)*'
-    const parent_font_style = {
-      'line-height': hit_elem.css('line-height'),
-      'font-size': '1em',
-      'font-family': hit_elem.css('font-family')
-    }
-
-    const text_nodes = hit_elem.contents().filter(function () {
-      return this.nodeType == Node.TEXT_NODE && XRegExp(word_re).test(this.nodeValue)
-    })
-
-    if (text_nodes.length == 0) {
-      debug('no text')
-      return ''
-    }
-
-    const hit_text_node = getExactTextNode(text_nodes, e)
-    if (!hit_text_node) {
-      debug('hit between lines')
-      return ''
-    }
-
-    const hit_word = restorable(hit_text_node, function () {
-      let hw = ''
-
-      function getHitText(node, parent_font_style) {
-        debug('getHitText: \'' + node.textContent + '\'')
-
-        if (XRegExp(word_re).test(node.textContent)) {
-          $(node).replaceWith(function () {
-            return this.textContent.replace(XRegExp('^(.{' + Math.round(node.textContent.length / 2) + '}(?:\\p{L}|[\'’](?=\\p{L}))*)(.*)', 's'), function ($0, $1, $2) {
-              return '<transblock>' + TransOver.escape_html($1) + '</transblock><transblock>' + TransOver.escape_html($2) + '</transblock>'
-            })
-          })
-
-          $('transblock').css(parent_font_style)
-
-          const next_node = document.elementFromPoint(e.clientX, e.clientY).childNodes[0]
-
-          if (next_node.textContent == node.textContent) {
-            return next_node
-          } else {
-            return getHitText(next_node, parent_font_style)
-          }
-        } else {
-          return null
-        }
-      }
-
-      const minimal_text_node = getHitText(hit_text_node, parent_font_style)
-
-      if (minimal_text_node) {
-        //wrap words inside text node into <transover> element
-        $(minimal_text_node).replaceWith(function () {
-          return this.textContent.replace(XRegExp('(<|>|&|' + word_re + ')', 'gs'), function ($0, $1) {
-            switch ($1) {
-            case '<':
-              return '&lt;'
-            case '>':
-              return '&gt;'
-            case '&':
-              return '&amp;'
-            default:
-              return '<transover>' + $1 + '</transover>'
-            }
-          })
-        })
-
-        $('transover').css(parent_font_style)
-
-        //get the exact word under cursor
-        const hit_word_elem = document.elementFromPoint(e.clientX, e.clientY)
-
-        //no word under cursor? we are done
-        if (hit_word_elem.nodeName != 'TRANSOVER') {
-          debug('missed!')
-        } else {
-          hw = $(hit_word_elem).text()
-          debug('got it: \'' + hw + '\'')
-        }
-      }
-
-      return hw
-    })
-
-    return hit_word
-  }
-
-  const selection = window.getSelection()
-  const hit_elem = document.elementFromPoint(e.clientX, e.clientY)
-
-  // happens sometimes on page resize (I think)
-  if (!hit_elem) {
-    return
-  }
-
-  //skip inputs and editable divs
-  if (/INPUT|TEXTAREA/.test(hit_elem.nodeName) || hit_elem.isContentEditable
-    || $(hit_elem).parents().filter(function () {
-      return this.isContentEditable
-    }).length > 0) {
-
-    return
-  }
-
-  let word = ''
-  if (selection.toString()) {
-
-    if (Core.options.selection_key_only) {
-      debug('Skip because "selection_key_only"')
-      return
-    }
-
-    debug('Got selection: ' + selection.toString())
-
-    let sel_container = selection.getRangeAt(0).commonAncestorContainer
-
-    while (sel_container.nodeType != Node.ELEMENT_NODE) {
-      sel_container = sel_container.parentNode
-    }
-
-    if (
-      // only choose selection if mouse stopped within immediate parent of selection
-      ($(hit_elem).is(sel_container) || $.contains(sel_container, hit_elem))
-      // and since it can still be quite a large area
-      // narrow it down by only choosing selection if mouse points at the element that is (partially) inside selection
-      && selection.containsNode(hit_elem, true)
-    // But what is the point for the first part of condition? Well, without it, pointing at body for instance would also satisfy the second part
-    // resulting in selection translation showing up in random places
-    ) {
-      word = selection.toString()
-    } else if (Core.options.translate_by == 'point') {
-      word = getHitWord(e)
-    }
-  } else {
-    word = getHitWord(e)
-  }
-  if (word != '') {
-    // chrome.runtime.sendMessage({handler: 'translate', word: word}, function(response) {
-    //   debug('response: ', response)
-    //
-    //   const translation = TransOver.deserialize(response.translation)
-    //
-    //   if (!translation) {
-    //     debug('skipping empty translation')
-    //     return
-    //   }
-    //
-    //   last_translation = translation
-    //   showPopup(e, TransOver.formatTranslation(translation))
-    // })
-
-    chrome.runtime.sendMessage({handler: 'translate', word: word}, function (response) {
-      debug('response: ', response)
-
-      const translation = TransOver.deserialize(response.translation)
-
-      if (!translation) {
-        debug('skipping empty translation')
-        return
-      }
-
-      Core.last_translation = translation
-      Core.showPopup(e, TransOver.formatTranslation(translation))
-    })
-  }
-}
-
-
-
-$(document).on('mousestop', function (e) {
-  Core.withOptionsSatisfied(e, function () {
-    // translate selection unless 'translate selection on alt only' is set
-    if (window.getSelection().toString()) {
-      if (!Core.options.selection_key_only) {
-        process(e)
-      }
-    } else {
-      if (Core.options.translate_by === 'point') {
-        process(e)
-      }
-    }
-  })
-})
-
-$(document).click(function (e) {
-  Core.withOptionsSatisfied(e, function () {
-    if (Core.options.translate_by !== 'click')
-      return
-    if ($(e.target).closest('a').length > 0)
-      return
-
-    process(e)
-  })
-  return true
-})
-
-function hasMouseReallyMoved(e) { //or is it a tremor?
-  const left_boundry = parseInt(Core.last_mouse_stop.x) - 5,
-    right_boundry = parseInt(Core.last_mouse_stop.x) + 5,
-    top_boundry = parseInt(Core.last_mouse_stop.y) - 5,
-    bottom_boundry = parseInt(Core.last_mouse_stop.y) + 5
-
-  return e.clientX > right_boundry || e.clientX < left_boundry || e.clientY > bottom_boundry || e.clientY < top_boundry
-}
-
-
-$(document).mousemove(
-
-  /**
-   * check if it's just a small tremor. If it's not a tremor, fire a 'mousemove_without_noise' with attributes 'clientX' 'clientY'
-   */
-  function (e) {
-    if (hasMouseReallyMoved(e)) {
-      const mousemove_without_noise = new $.Event('mousemove_without_noise')
-      mousemove_without_noise.clientX = e.clientX
-      mousemove_without_noise.clientY = e.clientY
-
-      $(document).trigger(mousemove_without_noise)
-    }
-  })
-
-
-
-
-$(document).scroll(function () {
-  Core.removePopup('transover-popup')
-})
 
 chrome.runtime.onMessage.addListener(
 
