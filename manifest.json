@@ -1,9 +1,9 @@
 {
-  "name": "TransOver",
+  "name": "Cree Click-in-Text",
   "manifest_version": 2,
   "version": "1.46",
   "icons": { "16": "./icons/to_16.png", "48": "./icons/to_48.png", "128": "./icons/to_128.png" },
-  "description": "Hover, click or select to translate (with text-to-speech). Translator.",
+  "description": "Hover, click or select to translate Cree to English",
   "background": { "scripts": [
       "xregexp-all.js",
       "background.js"
@@ -26,7 +26,7 @@
       "description": "Copy translation to clipboard"
     }
   },
-  "permissions": [ "*://translate.google.com/*", "tabs", "tts" ],
+  "permissions": [ "*://translate.google.com/*", "tabs"],
   "web_accessible_resources": [
     "options.html",
     "popup.html",

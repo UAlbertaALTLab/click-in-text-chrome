@@ -6,20 +6,161 @@
     <meta name="viewport" content="width=device-width">
     <title>test</title>
 
+    <script type='text/javascript' src="test.js"></script>
+    <script type="text/javascript" src="options_script.js"></script>
     <style>
-      .test-word{
-        margin: 0;
-        padding: 0;
-        display: inline;
+
+
+      body, table {
+        color: #4f4f4f;
+        font: normal normal normal 14px Verdana, Tahoma, sans-serif;
+        border-spacing: 0;
       }
+
+      input, button {
+        font-size: 14px;
+      }
+
+      select {
+        font-size: 16px;
+      }
+
+      td {
+        width: 140px;
+      }
+
+      div.content {
+        text-align: left;
+      }
+
+      div.heading {
+        text-align: left;
+        font-size: 1.3em;
+      }
+
+      .option {
+        margin-top: 25px;
+      }
+
+      fieldset.option {
+        border-width: 1px;
+        border-radius: 5px;
+        border-style: solid;
+        border-color: #ccc;
+      }
+
+      div.button {
+        float: left;
+      }
+
+      div.button_group {
+        margin-top: 30px;
+      }
+
+      #status {
+        display: none;
+        color: green;
+        float: left;
+        margin-top: 4px;
+        margin-left: 8px;
+      }
+
+
+      .disabled {
+        color: #ccc;
+      }
+
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+        }
+      }
+
+
+
+
     </style>
 
+
   </head>
+
   <body>
-  <p id="test1" class="test-word">niskak</p>
+
+  <span id="test1">niskak</span>
 
     <p>Body stuff language sdfsdf hello see niskak</p>
     <p>Des organisations de défense des droits humains ont condamné</p>
 
+  <hr>
+
+  <div class="content">
+    <div class="heading">Cree Click-in-text Options</div>
+    <div class="option">
+      <label for="translate_by">when I</label>
+      <select id="translate_by" name="translate_by">
+        <option value="click">click on word</option>
+        <option value="point">point at word</option>
+      </select>
+    </div>
+
+    <div class="option" id="more_options_link">
+      <a href="#">more options</a>&nbsp;&gt;
+    </div>
+
+    <div id="more_options" style="display:none">
+
+
+      <div class="option">
+        Configure "type and translate" and "copy translation" hotkeys <a class="set_hotkey" href='#'>here</a>
+      </div>
+
+      <div class="option">
+        <input type="checkbox" id="word_key_only" name="word_key_only"/>
+        <label for="word_key_only">Only show word translation when</label>
+        <label for="word_key_only_key"> I hold the
+          <select name="word_key_only_key" id="word_key_only_key"></select>
+          key</label>
+      </div>
+
+      <div class="option">
+        <input type="checkbox" id="selection_key_only" name="selection_key_only"/>
+        <label for="selection_key_only">Only show selection translation when</label>
+        <label for="selection_key_only_key"> I hold the
+          <select name="selection_key_only_key" id="selection_key_only_key"></select>
+          key</label>
+      </div>
+
+      <div class="option disabled">
+        <label for="delay">Wait for</label>
+        <input type="number" id="delay" name="delay" disabled />
+        <span>ms before showing translation</span>
+      </div>
+
+      <div class="option">
+        <input type="checkbox" id="do_not_show_oops" name="do_not_show_oops"/>
+        <label for="do_not_show_oops">Do not show 'Oops... No translation found'</label>
+      </div>
+
+      <div class="option">Don't translate words on these sites:</div>
+      <table id='exc_urls_table'></table>
+
+      <div class="option">Only translate words on these sites:</div>
+      <table id='only_urls_table'></table>
+    </div>
+    <div class="button_group">
+      <div class="button">
+        <button id="save_button">Save</button>
+      </div>
+      <div id="status">Saved!</div>
+      <div style="clear: both"></div>
+    </div>
+  </div>
   </body>
 </html>
