@@ -4,13 +4,11 @@
 import TransOver from './lib/transover_utils'
 import Core from './lib/transover_core'
 
-const debug = require('debug')('transover')
-
-
-
+// const debug = require('debug')('transover')
 
 
 const getURL = function (e){ return chrome.extension.getURL(e)}
+
 const loadAndApplyOptions = () =>
 {
   let options = {}
@@ -43,16 +41,14 @@ const disable = () =>{
 }
 
 const grayOutIcon = () =>{
-
   chrome.runtime.sendMessage({handler: 'setIcon', disabled: Core.disable_on_this_page})
-
 }
 
 
 Core.loadAndApplyUserOptions(loadAndApplyOptions)
 Core.reloadAndApplyOptionsOnTabSwitch(loadAndApplyOptions)
 Core.startNoiselessMouseMovementsListening()
-Core.startKeyPressListening()
+Core.startKeyPressListening(asyncGetTranslation, getTranslationCallback)
 Core.startMouseStopHandling(asyncGetTranslation, getTranslationCallback)
 Core.startClickHandling(asyncGetTranslation, getTranslationCallback)
 Core.startMouseMoveHandling()

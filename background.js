@@ -4,51 +4,6 @@ import Core from './lib/transover_core'
 
 
 
-// chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-//   const except_urls = Options.except_urls()
-//
-//   switch (request.handler) {
-//   case 'get_options':
-//     sendResponse({
-//       options: JSON.stringify({
-//         except_urls: Options.except_urls(),
-//         only_urls: Options.only_urls(),
-//         delay: Options.delay(),
-//         word_key_only: Options.word_key_only(),
-//         selection_key_only: Options.selection_key_only(),
-//         popup_show_trigger: Options.popup_show_trigger(),
-//         translate_by: Options.translate_by(),
-//       })
-//     })
-//     break
-//   case 'translate':
-//     console.log('received to translate: ' + request.word)
-//     Core.callAPI(request.word, Core.parseAPIResponse, sendResponse)
-//     break
-//   case 'setIcon':
-//     chrome.browserAction.setIcon({path: request.disabled ? 'icons/to_bw_38.png' : 'icons/to_38.png'})
-//     break
-//   case 'toggle_disable_on_this_page':
-//     if (request.disable_on_this_page) {
-//       if (!except_urls.find(u => u.match(request.current_url))) {
-//         Options.except_urls(
-//           [request.current_url, ...except_urls]
-//         )
-//       }
-//     } else {
-//       if (except_urls.find(u => u.match(request.current_url))) {
-//         Options.except_urls(
-//           except_urls.filter(u => !u.match(request.current_url))
-//         )
-//       }
-//     }
-//     break
-//   default:
-//     console.error('Unknown handler')
-//     sendResponse({})
-//   }
-// })
-
 chrome.browserAction.onClicked.addListener(function(tab) {
   chrome.tabs.sendMessage(tab.id, 'open_type_and_translate')
 })
