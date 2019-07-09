@@ -7,5 +7,7 @@
 set -ex
 
 here="$(dirname "$0")"
-mv dist/contentscript.js dist/contentscript.js-utf8 &&\
-    node "$here/askiy.js" dist/contentscript.js-utf8 dist/contentscript.js
+tmp=dist/contentscript.js-utf8
+mv dist/contentscript.js "$tmp"  &&\
+    node "$here/askiy.js" dist/contentscript.js-utf8 dist/contentscript.js &&\
+    rm "$tmp"
