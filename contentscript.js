@@ -30,7 +30,7 @@ const getTranslationCallback = (response) => {
   return TransOver.deserialize(response.translation)
 }
 
-let addTATAndCopyPasteListner = function (e) {chrome.runtime.onMessage.addListener(e)}
+let addTATAndCopyPasteListener = function (e) {chrome.runtime.onMessage.addListener(e)}
 
 const disable = () =>{
   chrome.runtime.sendMessage({
@@ -53,7 +53,7 @@ Core.startMouseStopHandling(asyncGetTranslation, getTranslationCallback)
 Core.startClickHandling(asyncGetTranslation, getTranslationCallback)
 Core.startMouseMoveHandling()
 Core.removePopupUponScrolling()
-Core.attachTATandCopyPasteHandler(addTATAndCopyPasteListner)
+Core.attachTATandCopyPasteHandler(addTATAndCopyPasteListener)
 Core.registerComponents(getURL)
 Core.addMessageHandlersToWindow(asyncGetTranslation, getTranslationCallback, disable, grayOutIcon)
 

@@ -32,16 +32,55 @@ Cypress.Commands.add('set_option', (doshit) => {
 
 })
 
+
+
 // 'move' command simulates hovering on an element
 Cypress.Commands.add('move',{prevSubject: true}, (subject) => {
   const $this = subject
+
   const offset = $this.offset()
   const width = $this.width()
   const height = $this.height()
 
   const centerX = offset.left + width / 2
   const centerY = offset.top + height / 2
-  cy.document().trigger('mousemove', {clientX:centerX, clientY: centerY})
+
+  cy.get($this).scrollIntoView()
+
+  cy.window().then(($window)=>{
+
+    cy.document().trigger('mousemove', {clientX:centerX, clientY: centerY-$window.scrollY})
+  })
+})
 
 
+// 'selectText' command simulates selecting some text
+Cypress.Commands.add('selectText',{prevSubject: true}, (subject) => {
+
+
+  cy.get(subject).then(($el) =>{
+    const el = $el[0]
+    const document = el.ownerDocument
+    const range = document.createRange()
+    range.selectNodeContents(el)
+    document.getSelection().removeAllRanges(range)
+    document.getSelection().addRange(range)
+  })
+
+  const $this = subject
+
+  const offset = $this.offset()
+  const width = $this.width()
+  const height = $this.height()
+
+  const centerX = offset.left + width / 2
+  const centerY = offset.top + height / 2
+
+
+  cy.get($this).scrollIntoView()
+
+  cy.window().then(($window)=>{
+
+    cy.document().trigger('mousemove', {clientX:centerX, clientY: centerY-$window.scrollY})
+  })
 })

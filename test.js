@@ -23,11 +23,10 @@ const loadAndApplyOptions = () =>
   }
 }
 
-
-
 $(()=> {
   $('#save_button').click(function () {
     Options.save_options()
+    console.log('options saved')
     Core.options = loadAndApplyOptions()
     // console.table(Core.options)
   })
@@ -43,7 +42,45 @@ const getTranslationCallback = (response) => {
   return TransOver.deserialize(response.translation)
 }
 
-let addTATAndCopyPasteListner = function (e) {}
+let addTATAndCopyPasteListner = function (callback) {
+
+  $(()=> {
+
+
+
+    $('#copy_button').click(function () {
+      callback('copy-translation-to-clipboard')
+    })
+
+    $('#tat_button').click(function () {
+      callback('open_type_and_translate')
+    })
+
+
+  }
+  )
+
+  // not tested in cypress cuz cypress is a bitch on pressing shortcuts
+  document.onkeyup = function(e) {
+  //.keyCode is deprecated, use .code
+  // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code/code_values
+    let code = e.code
+
+    // assume the user uses alt + X as "copy translation to clipboard" shortcut
+    if (e.altKey && code === 'KeyX'){
+      callback('copy-translation-to-clipboard')
+    }
+
+    // assume the user uses alt + z as "open type and translate popup" shortcut
+    if (e.altKey && code === 'KeyZ'){
+      callback('open_type_and_translate')
+    }
+
+  }
+
+}
+
+
 
 const disable = () =>{
 
@@ -54,17 +91,8 @@ const grayOutIcon = () =>{
 }
 
 
-Core.loadAndApplyUserOptions(loadAndApplyOptions)
-Core.reloadAndApplyOptionsOnTabSwitch(loadAndApplyOptions)
-Core.startNoiselessMouseMovementsListening()
-Core.startKeyPressListening(asyncGetTranslation, getTranslationCallback)
-Core.startMouseStopHandling(asyncGetTranslation, getTranslationCallback)
-Core.startClickHandling(asyncGetTranslation, getTranslationCallback)
-Core.startMouseMoveHandling()
-Core.removePopupUponScrolling()
-Core.attachTATandCopyPasteHandler(addTATAndCopyPasteListner)
-Core.registerComponents(getURL)
-Core.addMessageHandlersToWindow(asyncGetTranslation, getTranslationCallback, disable, grayOutIcon)
+
+Core.start(getURL, loadAndApplyOptions, asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListner, disable, grayOutIcon)
 
 
 
