@@ -1,6 +1,12 @@
-dist
-node_modules
+# Stupid macOS stuff:
 .DS_Store
+
+# Build results
+dist/
+*.zip
+
+# Node/npm
+node_modules/
 dev_util/venv
 cypress/screenshots
 cypress/videos
