@@ -9,20 +9,18 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 })
 
 chrome.runtime.onInstalled.addListener(function(details) {
-  if (details.reason == 'install') {
+  if (details.reason === 'install') {
     chrome.tabs.create({url: chrome.extension.getURL('options.html')})
   }
 })
 
 chrome.commands.onCommand.addListener(function(command) {
-  switch (command) {
-  case 'copy-translation-to-clipboard':
+  if (command === 'copy-translation-to-clipboard') {
     chrome.tabs.query({active: true}, ([activeTab]) => {
       chrome.tabs.sendMessage(activeTab.id, 'copy-translation-to-clipboard')
     })
-    break
-  default:
-    console.log('Unknown command %s', command)
+  } else {
+    // console.log('Unknown command %s', command)
   }
 })
 
@@ -32,7 +30,7 @@ chrome.commands.onCommand.addListener(function(command) {
 function handleMessage (request, sender, sendResponse) {
   const except_urls = Options.except_urls()
 
-  console.log('place1')
+  // console.log('place1')
 
   switch (request.handler) {
   case 'get_options':
@@ -49,7 +47,6 @@ function handleMessage (request, sender, sendResponse) {
     })
     break
   case 'translate':
-    console.log('received to translate: ' + request.word)
     Core.callAPI(request.word, Core.parseAPIResponse, sendResponse)
     break
 
@@ -72,7 +69,7 @@ function handleMessage (request, sender, sendResponse) {
     }
     break
   default:
-    console.error('Unknown handler')
+    // console.error('Unknown handler')
     sendResponse({})
   }
 

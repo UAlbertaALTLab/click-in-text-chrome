@@ -1,7 +1,7 @@
 const path = require('path')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
-let webpack = require('webpack');
+let webpack = require('webpack')
 
 const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development'
 

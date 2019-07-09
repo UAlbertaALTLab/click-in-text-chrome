@@ -26,7 +26,6 @@ const loadAndApplyOptions = () =>
 $(()=> {
   $('#save_button').click(function () {
     Options.save_options()
-    console.log('options saved')
     Core.options = loadAndApplyOptions()
     // console.table(Core.options)
   })
@@ -42,7 +41,7 @@ const getTranslationCallback = (response) => {
   return TransOver.deserialize(response.translation)
 }
 
-let addTATAndCopyPasteListner = function (callback) {
+let addTATAndCopyPasteListener = function (callback) {
 
   $(()=> {
 
@@ -92,7 +91,7 @@ const grayOutIcon = () =>{
 
 
 
-Core.start(getURL, loadAndApplyOptions, asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListner, disable, grayOutIcon)
+Core.start(getURL, loadAndApplyOptions, asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListener, disable, grayOutIcon)
 
 
 
