@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "NODE_ENV=production webpack && cd dist && zip -FS -r ../translate_onhover ./* -x test.html test.js",
+    "build": "NODE_ENV=production webpack && libexec/fix-non-ascii-contentscript && cd dist && zip -FS -r ../translate_onhover ./* -x test.html test.js",
     "build_dist": "NODE_ENV=production webpack",
     "dev": "webpack --watch",
     "test": "npx http-server dist & npx wait-on http-get://localhost:8080 && npx cypress run --spec 'cypress/integration/*'",

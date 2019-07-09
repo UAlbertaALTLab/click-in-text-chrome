@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Chrome 75 (on Mac, at least) does not like loading the minified
+# contentscript, despite the fact that it is properly UTF-8 encoded. As a
+# workaround, we convert all of its non-ASCII characters to \uXXXX escapes.
+
+set -ex
+
+here="$(dirname "$0")"
+mv dist/contentscript.js dist/contentscript.js-utf8 &&\
+    node "$here/askiy.js" dist/contentscript.js-utf8 dist/contentscript.js
