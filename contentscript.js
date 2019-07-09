@@ -44,16 +44,6 @@ const grayOutIcon = () =>{
   chrome.runtime.sendMessage({handler: 'setIcon', disabled: Core.disable_on_this_page})
 }
 
+Core.start(getURL,loadAndApplyOptions,asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListener, disable, grayOutIcon)
 
-Core.loadAndApplyUserOptions(loadAndApplyOptions)
-Core.reloadAndApplyOptionsOnTabSwitch(loadAndApplyOptions)
-Core.startNoiselessMouseMovementsListening()
-Core.startKeyPressListening(asyncGetTranslation, getTranslationCallback)
-Core.startMouseStopHandling(asyncGetTranslation, getTranslationCallback)
-Core.startClickHandling(asyncGetTranslation, getTranslationCallback)
-Core.startMouseMoveHandling()
-Core.removePopupUponScrolling()
-Core.attachTATandCopyPasteHandler(addTATAndCopyPasteListener)
-Core.registerComponents(getURL)
-Core.addMessageHandlersToWindow(asyncGetTranslation, getTranslationCallback, disable, grayOutIcon)
 
