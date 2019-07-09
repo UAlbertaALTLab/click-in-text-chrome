@@ -1,4 +1,4 @@
 language: node_js
 node_js: "node"
 
-before_script: "npm build_dist"
+before_script: "npm run build_dist"

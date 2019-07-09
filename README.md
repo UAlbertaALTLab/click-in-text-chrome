@@ -1,4 +1,6 @@
 # Click-In-Text
+![travis badge](https://travis-ci.org/UAlbertaALTLab/click-in-text.svg?branch=master)
+
 Adapted from the amazing chrome extension TransOver under MIT license
 
 If you don't know much about chrome extensions: \
