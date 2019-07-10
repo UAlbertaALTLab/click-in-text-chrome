@@ -1,4 +1,4 @@
-# Click-In-Text
+# Click-In-Text-Chrome
 ![travis badge](https://travis-ci.org/UAlbertaALTLab/click-in-text.svg?branch=master)
 
 Adapted from [TransOver](https://github.com/artemave/translate_onhover), the amazing chrome extension under MIT license
