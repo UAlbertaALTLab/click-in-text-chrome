@@ -2,11 +2,10 @@
 .DS_Store
 
 # Build results
-dist/
+dist
 *.zip
 
 # Node/npm
-node_modules/
-dev_util/venv
+node_modules
 cypress/screenshots
 cypress/videos
