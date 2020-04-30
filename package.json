@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "debug": "^4.1.1",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "xregexp": "^4.2.0"
   }
 }
