@@ -1,0 +1,25 @@
+name: Reformats various files
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  reformat-javascript:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.head_ref }}
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14'
+    - name: Install dependencies
+      run: npm ci
+    - name: Reformat JavaScript
+      run: npx eslint --fix libexec/ lib/ cypress/
+    - name: Git Auto Commit
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "🤖🧹 reformat JavaScript files [skip travis]"
