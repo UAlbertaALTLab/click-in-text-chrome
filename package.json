@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "build": "NODE_ENV=production webpack && libexec/fix-non-ascii-contentscript && cd dist && zip -FS -r ../translate_onhover ./* -x test.html test.js",
-    "build_dist": "NODE_ENV=production webpack",
+    "build": "cross-env NODE_ENV=production webpack && libexec/fix-non-ascii-contentscript && cd dist && zip -FS -r ../translate_onhover ./* -x test.html test.js",
+    "build_dist": "cross-env NODE_ENV=production webpack",
     "dev": "webpack --watch",
     "test": "npx http-server dist & npx wait-on http-get://localhost:8080 && npx cypress run --spec 'cypress/integration/*'",
     "lint": "eslint --ignore-pattern dist --ignore-pattern cypress ."
@@ -12,6 +12,7 @@
     "babel-loader": "^8.0.5",
     "clean-webpack-plugin": "^1.0.0",
     "copy-webpack-plugin": "^4.6.0",
+    "cross-env": "^7.0.2",
     "cypress": "^3.3.2",
     "eslint": "^5.11.0",
     "eslint-plugin-cypress": "^2.2.1",
