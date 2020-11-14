@@ -80,3 +80,10 @@ you to load local unzipped directories as chrome extensions.
 
 2. Click on "Load unpacked" ![load_unpacked.png](readme_assets/load_unpacked.png)  and choose the generated `./dist` directory.
 This loads the code generated in `./dist` as a chrome plugin.
+
+## Linter
+
+`.eslintrc` and `.eslintignore` are both present. To project javascript manually, 
+run `$ eslint [--fix] .` under project root. 
+
+We also have a Github action that runs `eslint --fix .` and commits automatically to enforce formatting.
