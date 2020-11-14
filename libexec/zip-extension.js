@@ -32,22 +32,3 @@ recursiveReadDir('dist', excludedFiles, function (err, filePaths) {
     streamFiles: true
   }).pipe(fs.createWriteStream(outName)).on('finish', () => console.log(`${outName} written`)))
 })
-
-//
-// const targetName = 'click-in-text.gz'
-//
-// fsPromise.readdir('dist').then(filePaths =>{
-//   return Promise.all(filePaths.map(filename => {
-//     return new Promise((resolve, reject) => {
-//       const fileContents = fs.createReadStream(path.resolve('dist', filename))
-//       const writeStream = fs.createWriteStream(targetName)
-//       const zip = zlib.createGzip()
-//       fileContents.pipe(zip).pipe(writeStream).on('finish', (err) => {
-//         if (err) return reject(err)
-//         else resolve()
-//       })
-//     })
-//   }))
-//     .then(()=>console.log('Done compressing extension'))
-// })
-//
