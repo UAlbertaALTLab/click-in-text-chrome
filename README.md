@@ -1,4 +1,5 @@
 # Click-In-Text-Chrome
+![travis badge](https://travis-ci.org/UAlbertaALTLab/click-in-text.svg?branch=master)
 
 Adapted from [TransOver](https://github.com/artemave/translate_onhover), the amazing chrome extension under MIT license
 
@@ -88,7 +89,7 @@ This loads the code generated in `./dist` as a chrome plugin.
 
 ## Linter
 
-`.eslintrc` and `.eslintignore` are both present. To project javascript manually, 
-run `$ eslint [--fix] .` under project root. 
+`.eslintrc` and `.eslintignore` are both present. To lint project javascript manually, 
+run `npm run lint` or `$ eslint [--fix] .` under project root. 
 
 We also have a Github action that runs `eslint --fix .` and commits automatically to enforce formatting.
