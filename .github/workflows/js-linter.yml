@@ -1,4 +1,4 @@
-name: Reformats various files
+name: Reformats javascript files
 
 on:
   push:
