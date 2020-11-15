@@ -4,7 +4,7 @@
     "build_dist": "cross-env NODE_ENV=production webpack",
     "dev": "webpack --watch",
     "test": "npx http-server dist & npx wait-on http-get://localhost:8080 && npx cypress run --spec 'cypress/integration/*'",
-    "lint": "eslint --ignore-pattern dist --ignore-pattern cypress ."
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
