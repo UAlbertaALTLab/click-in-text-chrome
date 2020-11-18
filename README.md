@@ -91,4 +91,4 @@ This loads the code generated in `./dist` as a chrome plugin.
 `.eslintrc` and `.eslintignore` are both present. To lint project javascript manually, 
 run `npm run lint` or `$ eslint [--fix] .` under project root. 
 
-We also have a Github action that runs `eslint --fix .` and commits automatically to enforce formatting.
+We also have a workflow  that runs `eslint --fix .` and commits automatically to enforce formatting upon push/merge into master.
