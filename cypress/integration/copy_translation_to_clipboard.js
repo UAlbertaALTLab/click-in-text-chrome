@@ -6,7 +6,7 @@ describe('Clipboard', function() {
 
     cy.get('#test1').click()
 
-    cy.get('transover-popup').should('have.attr', 'content').and('include', 'damp')
+    cy.get('transover-popup').should('have.attr', 'content').and('include', 'see')
 
     // cy.get('.blank-rectangle').move()
 
