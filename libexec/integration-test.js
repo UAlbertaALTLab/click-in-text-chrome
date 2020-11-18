@@ -3,7 +3,8 @@
  */
 
 const { spawn } = require('child_process')
-spawn('npx', ['http-server', 'dist'],{shell:true})
+
+spawn('npx', ['http-server', 'dist'], {shell: true})
 const waitOnProcess = spawn('npx', ['wait-on', 'http-get://localhost:8080/test.html'], {shell:true})
 
 waitOnProcess.on('close', () => {
