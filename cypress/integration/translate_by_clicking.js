@@ -1,7 +1,6 @@
 describe('Default settings', function() {
   it('shows popup for cree', function() {
     cy.visit('localhost:8080/test.html')
-    // cy.get('#test1').move()
 
     // eslint-disable-next-line cypress/no-unnecessary-waiting
     cy.wait(500) // for javascript to settle
