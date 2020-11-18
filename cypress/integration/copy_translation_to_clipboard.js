@@ -1,12 +1,12 @@
 // copy button doesn't work
-describe('Clipboard', function() {
-  it.skip('copies the last translation to clipboard', function() {
+describe.skip('Clipboard', function() {
+  it('copies the last translation to clipboard', function() {
     cy.visit('localhost:8080/test.html')
 
 
     cy.get('#test1').click()
 
-    cy.get('transover-popup').should('have.attr', 'content').and('include', 'damp')
+    cy.get('transover-popup').should('have.attr', 'content').and('include', 'see')
 
     // cy.get('.blank-rectangle').move()
 
