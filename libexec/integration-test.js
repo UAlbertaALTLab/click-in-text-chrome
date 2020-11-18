@@ -10,7 +10,7 @@ const waitOnProcess = spawn('npx', ['wait-on', 'http-get://localhost:8080/test.h
 waitOnProcess.on('close', () => {
   console.log('starting cypress tests')
 
-  const cypressProcess = spawn('npx', ['cypress', 'run', '--spec', 'cypress/integration/*'], {shell:true})
+  const cypressProcess = spawn('npx', ['cypress', 'run'], {shell:true})
   // fixme: we can maybe add stdio option to replace the two lines below
   //  see https://nodejs.org/api/child_process.html#child_process_options_stdio
   //  However, I tried stdio:'pipe', stdio: ['pipe', 'pipe', 'pipe'], and stdio: ['ignore', 'pipe', 'pipe']

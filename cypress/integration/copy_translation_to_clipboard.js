@@ -1,6 +1,6 @@
 // copy button doesn't work
-describe('Clipboard', function() {
-  it.skip('copies the last translation to clipboard', function() {
+describe.skip('Clipboard', function() {
+  it('copies the last translation to clipboard', function() {
     cy.visit('localhost:8080/test.html')
 
 
