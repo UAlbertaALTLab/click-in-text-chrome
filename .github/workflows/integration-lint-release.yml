@@ -63,7 +63,6 @@ jobs:
           #            Changes in this Release
           #            - First Change
           #            - Second Change
-
           # suggestion: create draft releases only and manually publish?
           #   con: There isn't really a lot for human to manually check...
           #   nothing is put at stake by publishing some extra packages either.
