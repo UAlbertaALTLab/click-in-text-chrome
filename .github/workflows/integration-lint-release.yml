@@ -1,0 +1,82 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Node.js CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  # This job does integration test using cypress, lints javascript and commits to master,
+  # and publishes zipped chrome-extension on Github Release.
+  # each step depends on the success of a previous one.
+
+  # Currently these are set up in different steps under this same job.
+  # Alternatively one can set these up in 3 different jobs or even multiple workflow files.
+  # However these 3 tasks are perfect linear and each one depends on the success of a previous one.
+  # So setting them up in one job makes sense. It saves github actions run time as well as extra task dependency setup.
+  test-lint-release:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - run: npm ci
+      - run: npm run build_dist --if-present
+      - run: npm test
+
+      # Now we lint the code. Note we have an if: below, which makes it  only run on push, not on pull requests.
+      - name: Reformat JavaScript
+        if: github.event_name == 'push'
+        run: npx eslint --fix .
+
+      - name: Git Auto Commit
+        if: github.event_name == 'push'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "🤖🧹 reformat JavaScript files [skip travis]"
+
+      # Now we publish zipped chrome extension to GitHub releases. This too will only happen on push.
+      - name: Zip chrome-extension
+        if: github.event_name == 'push'
+        # ./dist folder is built during integration testing, so just zipping is needed
+        run: node libexec/zip-extension.js
+
+      - name: Create Release
+        id: create_release
+        if: github.event_name == 'push'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          #          body: |
+          #            Changes in this Release
+          #            - First Change
+          #            - Second Change
+
+          # suggestion: create draft releases only and manually publish?
+          #   con: There isn't really a lot for human to manually check...
+          #   nothing is put at stake by publishing some extra packages either.
+          draft: false
+          prerelease: false
+
+        - name: Upload Release Asset
+          if: github.event_name == 'push'
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+            asset_path: ./click-in-text.zip
+            asset_name: click-in-text.zip
+            asset_content_type: application/zip
