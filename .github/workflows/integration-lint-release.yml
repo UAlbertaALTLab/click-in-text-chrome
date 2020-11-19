@@ -9,6 +9,8 @@ on:
   pull_request:
     branches: [ master ]
 
+
+
 jobs:
 
   # This job does integration test using cypress, lints javascript and commits to master,
@@ -21,6 +23,8 @@ jobs:
   # So setting them up in one job makes sense. It saves github actions run time as well as extra task dependency setup.
   test-lint-release:
 
+    # add [skip-ci] (in this exact form) in your commit message to skip actions
+    if: "! contains(toJSON(github.event.commits.*.msg), '[skip-ci]')"
     runs-on: ubuntu-latest
 
     steps:
@@ -51,8 +55,6 @@ jobs:
         run: node libexec/fix-non-ascii-contentscript.js && node libexec/zip-extension.js
 
       # date will be used as release tag and name
-      # Note if two releases are to be built the same day
-      # Somebody should manually delete the previous release first because of tag conflict
       - name: Get current date
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d.rc%H%M')"
