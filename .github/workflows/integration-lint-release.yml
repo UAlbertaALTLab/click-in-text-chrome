@@ -24,7 +24,7 @@ jobs:
   test-lint-release:
 
     # add [skip-ci] (in this exact form) in your commit message to skip actions
-    if: "! contains(toJSON(github.event.commits.*.msg), '[skip-ci]')"
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
     runs-on: ubuntu-latest
 
     steps:
