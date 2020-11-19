@@ -47,8 +47,8 @@ jobs:
       # Now we publish zipped chrome extension to GitHub releases. This too will only happen on push.
       - name: Zip chrome-extension
         if: github.event_name == 'push'
-        # ./dist folder is built during integration testing, so just zipping is needed
-        run: node libexec/zip-extension.js
+        # ./dist folder is built during integration testing, so just UTF-8 cleaning and zipping are needed
+        run: node libexec/fix-non-ascii-contentscript.js && node libexec/zip-extension.js
 
       - name: Create Release
         id: create_release
