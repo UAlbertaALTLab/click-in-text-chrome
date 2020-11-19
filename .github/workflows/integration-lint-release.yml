@@ -46,7 +46,7 @@ jobs:
         if: github.event_name == 'push'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "🤖🧹 reformat JavaScript files [skip travis]"
+          commit_message: "🤖🧹 reformat JavaScript files [skip-ci]"
 
       # Now we publish zipped chrome extension to GitHub releases. This too will only happen on push.
       - name: Zip chrome-extension
