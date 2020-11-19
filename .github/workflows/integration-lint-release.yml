@@ -51,9 +51,11 @@ jobs:
         run: node libexec/fix-non-ascii-contentscript.js && node libexec/zip-extension.js
 
       # date will be used as release tag and name
+      # Note if two releases are to be built the same day
+      # Somebody should manually delete the previous release first because of tag conflict
       - name: Get current date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d.rc%H%M')"
 
       - name: Create Release
         id: create_release
