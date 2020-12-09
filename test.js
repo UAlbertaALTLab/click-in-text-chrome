@@ -24,7 +24,7 @@ const loadAndApplyOptions = () =>
 }
 
 $(()=> {
-  $('#save_button').click(function () {
+  $('#save_button').on('click',function () {
     Options.save_options()
     Core.options = loadAndApplyOptions()
     // console.table(Core.options)
@@ -33,7 +33,6 @@ $(()=> {
 )
 
 const asyncGetTranslation = (word, callback) =>{
-
   Core.callAPI(word, Core.parseAPIResponse, callback)
 }
 
@@ -47,11 +46,11 @@ let addTATAndCopyPasteListener = function (callback) {
 
 
 
-    $('#copy_button').click(function () {
+    $('#copy_button').on('click',function () {
       callback('copy-translation-to-clipboard')
     })
 
-    $('#tat_button').click(function () {
+    $('#tat_button').on('click',function () {
       callback('open_type_and_translate')
     })
 
