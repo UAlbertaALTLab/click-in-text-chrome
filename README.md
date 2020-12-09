@@ -92,3 +92,25 @@ This loads the code generated in `./dist` as a chrome plugin.
 run `npm run lint` or `$ eslint [--fix] .` under project root. 
 
 We also have a Github action that runs `eslint --fix .` and commits automatically to enforce formatting.
+
+## Todo: embedded version
+
+Goal: 
+
+so that website maintainers can include this one liner in their HTML and get click-in-text on their page:
+ 
+    `<script src="https://unpkg.com/cree-click-in-text"></script>`
+    
+Question:
+
+Do we need an option/configuration page in this embedded version? Current chrome extension supports configuration by
+a chrome proprietary menu, where you can set things like `translation delay`, `translation key - alt/ctrl`, `hover or click` etc.
+
+If we do need a option page for embedded version, in what form do we present the options page? I think a hovering widget
+is ideal.
+
+
+## Todo: Adapt to multiple browsers
+
+Seems like there are ways to write a cross-browser extension in one codebase, 
+see more at Mozilla's [Build a cross browser extension](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Build_a_cross_browser_extension)
