@@ -1,15 +1,15 @@
 {
   "scripts": {
-    "build": "cross-env NODE_ENV=production webpack && libexec/fix-non-ascii-contentscript && cd dist && zip -FS -r ../translate_onhover ./* -x test.html test.js",
+    "build": "cross-env NODE_ENV=production webpack && node libexec/fix-non-ascii-contentscript.js && node libexec/zip-extension.js",
     "build_dist": "cross-env NODE_ENV=production webpack",
     "dev": "webpack --watch",
-    "test": "npx http-server dist & npx wait-on http-get://localhost:8080 && npx cypress run --spec 'cypress/integration/*'",
-    "lint": "eslint --ignore-pattern dist --ignore-pattern cypress ."
+    "test-server": "npx http-server dist",
+    "test": "node libexec/integration-test.js",
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",
     "@babel/plugin-transform-classes": "^7.4.4",
-    "@types/node": "^14.14.7",
     "babel-loader": "^8.0.5",
     "clean-webpack-plugin": "^1.0.0",
     "copy-webpack-plugin": "^4.6.0",
@@ -18,9 +18,9 @@
     "eslint": "^5.11.0",
     "eslint-plugin-cypress": "^2.2.1",
     "http-server": "^0.11.1",
+    "jszip": "^3.5.0",
     "npx": "^10.2.0",
-    "ts-loader": "^8.0.11",
-    "typescript": "^4.0.5",
+    "recursive-readdir": "^2.2.2",
     "wait-on": "^3.2.0",
     "webpack": "^4.28.2",
     "webpack-cli": "^3.1.2"

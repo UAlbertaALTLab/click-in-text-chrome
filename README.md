@@ -1,5 +1,4 @@
 # Click-In-Text-Chrome
-![travis badge](https://travis-ci.org/UAlbertaALTLab/click-in-text.svg?branch=master)
 
 Adapted from [TransOver](https://github.com/artemave/translate_onhover), the amazing chrome extension under MIT license
 
@@ -15,27 +14,33 @@ Under project root directory
 
 ## Directory Structure
 
-important files/directories:
+##### What's compiled by webpack and goes into zipped build
 
 `./icons`: Icon of this extension in different resolution. Check `./icons/README.md` for how to generate icons.
 
-`./lib`: Core Javascript code that are reusable (browser invariant)
+`./lib`: Core Javascript code that are reusable (browser invariant). 
+ECMAScript Module is used.
 
-`./background.js` `./contentscript.js`: Browser extension components
+`./background.js` `./contentscript.js` `./options.html`: Chrome-extension specific files
 
-`./options.html`: browser extension component
+##### Others
 
-`./test.html`: Test page for cypress to test the UI of the extension. Specifically excluded in the final extension (zip file)
+`./libexec`: build/dev scripts. Node scripts are preferred over shell script for cross-platform compatibility. 
 
-`./test.js`: Test script that goes with `test.html` to make sure core javascript code and can be thoroughly tested.
-Specifically excluded in the final extension (zip file). It basically mocks the functions in `contentscript.js` and `background.js` to run the plugin.
+`./test.html`: Test page for cypress to test the UI of the extension.
+
+`./test.js`: Test script that goes with `test.html` to make sure core javascript code and can be thoroughly tested. 
+It basically mocks the functions in `contentscript.js` and `background.js` to run the plugin.
 
 ### why `test.js`
 
-We use cypress to do integration tests. While it's not possible to test the plugin's UI as a specific browser plugin as cypress lacks the access to their API. For example 
- in cypress you can't detect plugin menu on the upper right side of Chrome. You can't open options.html as a chrome plugin settings page
- because it's not possible for cypress to click on the menu nor get the url of the page (which is allocated by chrome and only
- accessible through chrome API `getURL`, the `crhome://extensions/safdjsaifjg/options.html` url you'll see in the browser is understood
+We use cypress to do integration tests,
+while it's not possible to test the plugin's UI as a specific browser plugin as cypress lacks the access to their API.
+For example in cypress you can't detect plugin menu on the upper right side of Chrome.
+You can't open `options.html` as a chrome plugin settings page 
+because it's not possible for cypress to click on the menu nor get the url of the page 
+(which is allocated by chrome and only accessible through chrome API `getURL`, 
+the `crhome://extensions/safdjsaifjg/options.html` url you'll see in the browser is understood
  and routed by chrome and it's not possible to visit inside cypress)
  
 `test.js` mocks the browser apis to make the extension code work embedded on a web-page.
@@ -83,7 +88,29 @@ This loads the code generated in `./dist` as a chrome plugin.
 
 ## Linter
 
-`.eslintrc` and `.eslintignore` are both present. To project javascript manually, 
-run `$ eslint [--fix] .` under project root. 
+`.eslintrc` and `.eslintignore` are both present. To lint project javascript manually, 
+run `npm run lint` or `$ eslint [--fix] .` under project root. 
 
 We also have a Github action that runs `eslint --fix .` and commits automatically to enforce formatting.
+
+## Todo: embedded version
+
+Goal: 
+
+so that website maintainers can include this one liner in their HTML and get click-in-text on their page:
+ 
+    `<script src="https://unpkg.com/cree-click-in-text"></script>`
+    
+Question:
+
+Do we need an option/configuration page in this embedded version? Current chrome extension supports configuration by
+a chrome proprietary menu, where you can set things like `translation delay`, `translation key - alt/ctrl`, `hover or click` etc.
+
+If we do need a option page for embedded version, in what form do we present the options page? I think a hovering widget
+is ideal.
+
+
+## Todo: Adapt to multiple browsers
+
+Seems like there are ways to write a cross-browser extension in one codebase, 
+see more at Mozilla's [Build a cross browser extension](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Build_a_cross_browser_extension)
