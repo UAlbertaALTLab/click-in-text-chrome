@@ -1,0 +1,104 @@
+<!--this html styles the type-and-translate popup (appears when you left click on the chrome plugin icon)-->
+<template id="transover-tat-popup-template">
+  <style>
+    #tat_input_container {
+      display: flex;
+      margin-bottom: 10px;
+    }
+
+    #tat_input_container label {
+      line-height: 26px;
+    }
+
+    #tat_input {
+      margin-left: 5px;
+      flex-grow: 2;
+      font-size: 14px;
+      line-height: 20px;
+      border-radius: 2px;
+      border: 1px #ccc solid;
+      padding-left: 5px;
+    }
+
+    #tat_submit_container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #tat_submit_container select {
+      margin-left: 5px;
+    }
+
+    #tat_submit {
+      width: 45px;
+      margin-left: 5px;
+    }
+
+    main {
+      color: #333;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 19px;
+      width: 420px;
+      letter-spacing: initial;
+
+      background: #fcf7d9;
+      text-align: left;
+      border-style: solid;
+      border-width: 1px;
+      border-color: #ccc;
+      box-shadow: rgba(0,0,0,0.2) 0 2px 5px;
+      border-radius: 5px;
+      padding: 10px 10px 8px 10px;
+      position: fixed;
+      z-index: 2147483647;
+      top: 15px;
+      right: 15px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    #disable_on_this_page_container {
+      margin-bottom: 8px;
+      color: blue;
+    }
+
+    #disable_on_this_page {
+      position: relative;
+      vertical-align: middle;
+      bottom: 1px;
+      margin-right: 5px;
+    }
+
+    #top_row_container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #tat_close{
+      width: 12px;
+      height: 12px;
+      background: -webkit-linear-gradient(-45deg, transparent 0%, transparent 46%, darkgrey 46%, darkgrey 56%,transparent 56%, transparent 100%), -webkit-linear-gradient(45deg, transparent 0%, transparent 46%, darkgrey 46%,  darkgrey 56%,transparent 56%, transparent 100%);
+    }
+  </style>
+
+  <main>
+    <div id="top_row_container">
+      <div id="disable_on_this_page_container">
+        <label><input id="disable_on_this_page" type="checkbox"/>Disable on this site</label>
+      </div>
+      <a href="#" id="tat_close"></a>
+    </div>
+    <div id="tat_input_container">
+      <label for="tat_input">Translate</label>
+      <input id="tat_input" type="text">
+    </div>
+    <div id="tat_submit_container">
+
+
+      <input type="submit" id="tat_submit" value="go">
+    </div>
+  </main>
+</template>

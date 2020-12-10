@@ -6,14 +6,21 @@ let webpack = require('webpack')
 const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development'
 
 const config = {
-  devtool: 'inline-source-map',
+  devtool: 'source-map',
   mode,
   entry: {
+    // browser specific scripts (where browser specific API resides)
     background: './background.js',
     contentscript: './contentscript.js',
-    options_script: './lib/options_script.js',
-    tat_popup: './lib/tat_popup.js',
-    popup: './lib/popup.js',
+
+    // browser API independent scripts that go with respective HTML files
+    // Note the first two are injected to the <head> of user-opened web-pages every time user opens a tab
+    // while options_script.js is embedded in options.html
+    tat_popup: './lib/tat_popup.js', // this is the script for "type-and-translate" popup
+    popup: './lib/popup.js', // this is the script for click-in-text popup
+    options_script: './lib/options_script.js', // this is the script for click-in-text configuration page
+
+    // this script imitates contentscript.js and allows integration tests to be run by mocking browser APIs
     test: './test.js'
   },
   output: {
