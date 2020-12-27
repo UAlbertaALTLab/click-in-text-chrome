@@ -4,5 +4,6 @@
   "pluginsFile": false,
   "fixturesFolder": false,
   "supportFile": "cypress/support/commands.ts",
-  "screenshotOnRunFailure": false
+  "screenshotOnRunFailure": false,
+  "modifyObstructiveCode": false
 }
