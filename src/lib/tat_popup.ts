@@ -41,7 +41,7 @@ class TATPopup extends HTMLElement {
 
     this.q('#tat_close').onclick = (e) => {
       // todo: what does targetOrigin (the second argument) do?
-      window.postMessage({type: 'tat_close'}, "")
+      window.postMessage({type: 'tat_close'}, undefined)
       e.preventDefault()
     }
 
