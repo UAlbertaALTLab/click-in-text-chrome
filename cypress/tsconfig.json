@@ -1,3 +1,4 @@
+// this is recommended by cypress's typescript tutorial page
 {
   "compilerOptions": {
     "target": "es5",
