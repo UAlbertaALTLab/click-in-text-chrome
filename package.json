@@ -1,22 +1,24 @@
 {
   "scripts": {
-    "build": "cross-env NODE_ENV=production webpack && node libexec/fix-non-ascii-contentscript.js && node libexec/zip-extension.js",
+    "build": "cross-env NODE_ENV=production webpack && ts-node libexec/fix-non-ascii-contentscript.ts && ts-node libexec/zip-extension.ts",
     "build_dist": "cross-env NODE_ENV=production webpack",
     "dev": "webpack --watch",
-    "test": "node libexec/integration-test.js",
-    "lint": "eslint ."
+    "test": "ts-node libexec/integration-test.ts",
+    "lint": "eslint . --ext .ts,.js",
+    "lint-fix": "eslint --fix . --ext .ts,.js"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.4",
-    "@babel/plugin-transform-classes": "^7.4.4",
+    "@altlab/types": "^1.1.1",
+    "@types/chrome": "0.0.127",
+    "@types/jquery": "^3.5.5",
+    "@types/node": "^14.14.11",
     "@typescript-eslint/eslint-plugin": "^4.9.1",
     "@typescript-eslint/parser": "^4.9.1",
-    "babel-loader": "^8.0.5",
     "clean-webpack-plugin": "^1.0.0",
     "copy-webpack-plugin": "^4.6.0",
     "cross-env": "^7.0.2",
     "cypress": "^3.3.2",
-    "eslint": "^5.11.0",
+    "eslint": "^7.0.0",
     "eslint-plugin-cypress": "^2.11.2",
     "http-server": "^0.11.1",
     "jszip": "^3.5.0",
