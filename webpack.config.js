@@ -10,18 +10,22 @@ const config = {
   mode,
   entry: {
     // browser specific scripts (where browser specific API resides)
-    background: './background.js',
-    contentscript: './contentscript.js',
+    background: './src/browser/background.ts',
+    contentscript: './src/browser/contentscript.ts',
 
     // browser API independent scripts that go with respective HTML files
     // Note the first two are injected to the <head> of user-opened web-pages every time user opens a tab
     // while options_script.js is embedded in options.html
-    tat_popup: './lib/tat_popup.js', // this is the script for "type-and-translate" popup
-    popup: './lib/popup.js', // this is the script for click-in-text popup
-    options_script: './lib/options_script.js', // this is the script for click-in-text configuration page
+    tat_popup: './src/lib/tat_popup.ts', // this is the script for "type-and-translate" popup
+    popup: './src/lib/popup.ts', // this is the script for click-in-text popup
 
-    // this script imitates contentscript.js and allows integration tests to be run by mocking browser APIs
-    test: './test.js'
+    options_script: './src/browser/options_script.ts', // this is the script for click-in-text configuration page
+
+    // this script imitates contentscript.ts and allows integration tests to be run by mocking browser APIs
+    test: './src/embedded/test.ts'
+  },
+  resolve: {
+    extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js'],
   },
   output: {
     filename: '[name].js',
@@ -29,30 +33,36 @@ const config = {
   },
   module: {
     rules: [
-      {
-        test: /\.js$/,
-        exclude: [/node_modules/],
-        use: {
-          loader: 'babel-loader',
-          options: {
-            plugins: ['@babel/plugin-transform-classes']
-          }
-        }
-      }
+      // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
+      { test: /\.tsx?$/, loader: 'ts-loader' },
+
+      // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+      { test: /\.js$/, loader: 'source-map-loader' },
     ]
   },
 
   plugins: [
     new CleanWebpackPlugin(['dist']),
-    new CopyWebpackPlugin([
-      'manifest.json',
-      'icons/*.png',
-      'test.html',
-      'options.html',
-      'lib/popup.html',
-      'lib/tat_popup.html',
-      'node_modules/xregexp/xregexp-all.js'
-    ], {to: 'dist'}),
+    // files that directly copy to ./dist/ in a flatterned way
+    new CopyWebpackPlugin(
+      [
+        'src/browser/manifest.json',
+
+        // todo: consider getting rid of these by writing them in JS
+        'src/embedded/test.html',
+        'src/browser/options.html',
+        'src/lib/popup.html',
+        'src/lib/tat_popup.html',
+
+        'node_modules/xregexp/xregexp-all.js'
+      ], {to: 'dist'}
+    ),
+    // icon images that go to ./dist/icons
+    new CopyWebpackPlugin(
+      [
+        'icons/*.png',
+      ], {context: 'src', to: 'dist'}
+    ),
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery'
