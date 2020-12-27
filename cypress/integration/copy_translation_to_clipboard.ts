@@ -1,6 +1,6 @@
 // copy button doesn't work
-describe.skip('Clipboard', function() {
-  it('copies the last translation to clipboard', function() {
+describe.skip('Clipboard', function () {
+  it('copies the last translation to clipboard', function () {
     cy.visit('localhost:8080/test.html')
 
 
@@ -12,8 +12,8 @@ describe.skip('Clipboard', function() {
 
     cy.get('#copy_button').click()
 
-    cy.get('#test_input').focus().then(()=>{
-      cy.document().then((document)=>[
+    cy.get('#test_input').focus().then(() => {
+      cy.document().then((document) => [
         document.execCommand('paste')
       ])
     })

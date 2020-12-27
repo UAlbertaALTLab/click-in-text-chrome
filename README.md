@@ -16,23 +16,23 @@ Under project root directory
 
 ##### What's compiled by webpack and goes into zipped build
 
-`./icons`: Icon of this extension in different resolution. Check `./icons/README.md` for how to generate icons.
+`./src/icons`: Icon of this extension in different resolution. Check `./icons/README.md` for how to generate icons.
 
-`./lib`: Core Javascript code that are reusable (browser invariant). 
+`./src/lib`: Core Javascript code that are reusable (browser invariant). 
 ECMAScript Module is used.
 
-`./background.js` `./contentscript.js` `./options.html`: Chrome-extension specific files
+`./src/browser/background.ts` `./src/browser/contentscript.ts` `./options.html`: Chrome-extension specific files
 
 ##### Others
 
 `./libexec`: build/dev scripts. Node scripts are preferred over shell script for cross-platform compatibility. 
 
-`./test.html`: Test page for cypress to test the UI of the extension.
+`./src/embedded/test.html`: Test page for cypress to test the UI of the extension.
 
-`./test.js`: Test script that goes with `test.html` to make sure core javascript code and can be thoroughly tested. 
-It basically mocks the functions in `contentscript.js` and `background.js` to run the plugin.
+`./src/test.ts`: Test script that goes with `test.html` to make sure core javascript code and can be thoroughly tested. 
+It basically mocks the functions in `contentscript.ts` and `background.ts` to run the plugin.
 
-### why `test.js`
+### why `./src/test.ts`
 
 We use cypress to do integration tests,
 while it's not possible to test the plugin's UI as a specific browser plugin as cypress lacks the access to their API.
@@ -43,7 +43,7 @@ because it's not possible for cypress to click on the menu nor get the url of th
 the `crhome://extensions/safdjsaifjg/options.html` url you'll see in the browser is understood
  and routed by chrome and it's not possible to visit inside cypress)
  
-`test.js` mocks the browser apis to make the extension code work embedded on a web-page.
+`test.ts` mocks the browser apis to make the extension code work embedded on a web-page.
 
 ## Development Routine
 
@@ -52,7 +52,7 @@ the `crhome://extensions/safdjsaifjg/options.html` url you'll see in the browser
 
 2. Write some bugs. Files will be regenerated in `./dist`
 
-3. Test as embedded javascript: Make sure you have disabled this extension on your browser. `npm test` to run cypress tests. (It uses `test.html` `test.js` and runs the extension code as embedded javascript, as explained earlier)
+3. Test as embedded javascript: Make sure you have disabled this extension on your browser. `npm test` to run cypress tests. (It uses `test.html` `test.ts` and runs the extension code as embedded javascript, as explained earlier)
 
 4. (Optional) Manual Testing as an extension: Make sure you have installed the extension in development mode as instructed below. The installation only needs to be done once for any browser. Create any new tab or reload an existing tab to test the changes you just made.
 
@@ -64,7 +64,7 @@ Pro tips/Notes:
 - You can `npx cypress open` and do everything in cypress built-in chrome. Everything will be the same plus at Step 3 You can use
 cypress testing UI and make everything faster by omitting the need to restart a browser.
 
-- As explained earlier. Cypress test at Step 3 tests the extension code as embedded javascript enabled by `test.js`. Depending on the consistency between `test.js` and browser API behaviors. Cypress may go through a 
+- As explained earlier. Cypress test at Step 3 tests the extension code as embedded javascript enabled by `test.ts`. Depending on the consistency between `test.ts` and browser API behaviors. Cypress may go through a 
  different user experience than what a real user would go through via a browser extension. 
  You may want to do manual testing now and then to really find out.
 
@@ -88,10 +88,12 @@ This loads the code generated in `./dist` as a chrome plugin.
 
 ## Linter
 
-`.eslintrc` and `.eslintignore` are both present. To lint project javascript manually, 
-run `npm run lint` or `$ eslint [--fix] .` under project root. 
+run `npm run lint` or `npm run lint-fix` under project root. 
 
-We also have a Github action that runs `eslint --fix .` and commits automatically to enforce formatting.
+We also have a Github action that runs `npm run lint-fix` and commits automatically to enforce formatting.
+
+> Just let `npm` scripts do the work. Do not run `eslint` yourself, it by default only lints `.js` files but not `.ts` files [and it's not configurable through
+eslintrc](https://github.com/eslint/eslint/issues/11223).
 
 ## Todo: embedded version
 

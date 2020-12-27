@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "outDir": "./built",
+    "allowJs": true,
+    "target": "es2015", // tried: es5 doesn't work and fail at super() in options_script.ts
+    "moduleResolution": "node"
+  },
+  "include": ["./lib/**/*", "./embedded/**/*", "./browser/**/*"]
+}

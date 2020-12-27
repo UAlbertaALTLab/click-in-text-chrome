@@ -1,114 +1,146 @@
 // helper functions
-import Options from './options'
-import TransOver from './transover_utils'
+import {TransOver} from './transover_utils'
 import XRegExp from 'xregexp/src'
-
-
-const Core = {}
-
-
-Core.options = {}
+import {SerializedSearchResult} from '@altlab/types'
+import {options} from "./options";
+import Node = JQuery.Node;
 
 /**
- *
- * @param loadAndApolyOptions
+ * The function that handles parsedResponse
  */
-function loadAndApplyUserOptions(loadAndApolyOptions) {
-
-  Core.options = loadAndApolyOptions()
+type SendParsedResponse = (parsedResponse: ReturnType<ResponseParser>) => unknown;
 
 
+export type FailedTranslation = '' | 'Oops.. No translation found.'
+export type SuccessfulTranslation = { lemma: string, meanings: string[] }[]
+
+// We parse `SerializedSearchResult` from API to this type here.
+// suggestion: do we need this step? Can we just use `SerializedSearchResult`?
+/**
+ * The data our extension needs to present.
+ */
+interface ParsedResponse {
+  /**
+   * This is set to false when the response is not in the expected format or the response is in the expected format but
+   * the result is empty.
+   */
+  succeeded: boolean
+
+  /**
+   * The word we grabbed from a page
+   */
+  word: string
+
+  // might be a misnomer
+  /**
+   * The final thing we show on a popup
+   */
+  translation: FailedTranslation | SuccessfulTranslation
 }
 
-
-function reloadAndApplyOptionsOnTabSwitch(loadAndApplyOptions) {
-
-  //"The visibilitychange event is fired when the content of a tab has become visible or has been hidden."
-  document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) {
-      loadAndApplyUserOptions(loadAndApplyOptions)
-    }
-  }, false)
-}
-
-// where translate api happens
-Core.callAPI = (word, onresponse, sendResponse) => {
-
-  const options = {
-    url: 'https://sapir.artsrn.ualberta.ca/cree-dictionary/click-in-text?q=' + word,
-    dataType: 'json',
-    success: function on_success(data) {
-      onresponse(data, word, sendResponse)
-    },
-    error: function (xhr, status, e) {
-      // eslint-disable-next-line no-console
-      console.log({e: e, xhr: xhr})
-    }
-  }
-  $.ajax(options)
-}
+/**
+ * The callback that handles response from itwewina (the API endpoint that provides dictionary functionality)
+ * @param data: data received from jquery's ajax get request
+ * @param word: the word that was used to lookup dictionary entries
+ * @param sendParsedResponse: what to do next with the parsed response.
+ */
+type ResponseParser = (data: { "results": SerializedSearchResult[] }, word: string) => ParsedResponse;
 
 
-Core.parseAPIResponse = (data, word, sendResponse) => {
-  // for click-in-text api response, see this schema file:
-  // https://github.com/UAlbertaALTLab/cree-intelligent-dictionary/blob/master/CreeDictionary/API/schema.py
-  // Each result is described by SerializedSearchResult
+const Core = {
 
-  let output
-  const translation = {}
+  // where translate api happens
+  callAPI(word: string, responseParser: ResponseParser, sendParsedResponse: SendParsedResponse): void {
 
-  if (!data.results || data.results.length === 0) {
-    translation.succeeded = false
-    if (Options.do_not_show_oops()) {
-      output = ''
-    } else {
-      output = 'Oops.. No translation found.'
-    }
-  } else {
-    translation.succeeded = true
-    translation.word = word
-    output = []
-    // todo: trim irrelevant results. Currently we have a full page of results for the case of wapamew
-    //  and a lot of results are from prefix/suffix search
-    //  currently click-in-text API gets the same results as what itwewina shows the user when they searches
-    //  The different is that the user might not be certain what they are looking for on Itwewina, thus the need
-    //  for relaxation and affix search. While click-in-text users searches for some exact cree they find on the web.
-    //  So prefix/suffix search is unnecessary.
-
-    data.results.forEach(function (result) {
-
-      const definition_list = []
-
-      result.lemma_wordform.definitions.forEach(function (definition) {
-        definition_list.push(definition.text + '; ' + definition.source_ids.join(' '))
+    const options = {
+      url: 'https://sapir.artsrn.ualberta.ca/cree-dictionary/click-in-text?q=' + word,
+      dataType: 'json',
+      success: function on_success(data) {
+        const parsedResponse = responseParser(data, word)
+        sendParsedResponse(parsedResponse)
+      },
+      error: function (xhr, status, e) {
+        console.error({e: e, xhr: xhr})
       }
-      )
-      output.push({lemma: result.lemma_wordform.text, meanings: definition_list})
+    }
+    $.ajax(options)
+  },
+
+  parseAPIResponse(data: { "results": SerializedSearchResult[] }, word: string): ParsedResponse {
+    // for click-in-text api response, see this schema file:
+    // https://github.com/UAlbertaALTLab/cree-intelligent-dictionary/blob/master/CreeDictionary/API/schema.py
+    // Each result is described by SerializedSearchResult
+
+
+    let translation: FailedTranslation | SuccessfulTranslation
+    let succeeded: boolean;
+
+    if (!data.results || data.results.length === 0) {
+      succeeded = false
+      if (options.do_not_show_oops) {
+        translation = ''
+      } else {
+        translation = 'Oops.. No translation found.'
+      }
+    } else {
+      succeeded = true
+
+
+      translation = data.results.map(function (result) {
+
+        const definition_list: string[] = []
+        result.lemma_wordform.definitions.forEach(function (definition) {
+            definition_list.push(definition.text + '; ' + definition.source_ids.join(' '))
+          }
+        )
+        return {lemma: result.lemma_wordform.text, meanings: definition_list}
+      })
+
+    }
+
+
+    return {succeeded, translation, word}
+  },
+
+  /**
+   * check if the current url (window.location.href) is ignored
+   * @param options from local storage
+   */
+  ignoreThisPage(options: { except_urls: string[], only_urls: string[] }): boolean {
+    const isBlacklisted = $.grep(options.except_urls, function (url) {
+      return RegExp(url).test(window.location.href)
+    }).length > 0
+    const isWhitelisted = $.grep(options.only_urls, function (url) {
+        return RegExp(url).test(window.location.href)
+      }).length > 0 ||
+      options.only_urls.length === 0
+    return isBlacklisted || !isWhitelisted
+  },
+
+  timer25: undefined,
+  disable_on_this_page: false,
+
+  start: (getURL: GetComponentURL, addSaveOptionsHandler: AddSaveOptionsHandler, getTranslation: GetTranslation, getTranslationCallback: GetTranslationCallback, addTATAndCopyPasteListener: (TATAndCopyPasteHandler) => void, disableExtension: (...args) => unknown, grayOutIcon: (...args) => unknown): void => {
+    registerComponents(getURL)
+    addSaveOptionsHandler(() => {
+      options.saveOptions()
     })
-
+    startNoiselessMouseMovementsListening()
+    startKeyPressListening(getTranslation, getTranslationCallback)
+    startMouseStopHandling(getTranslation, getTranslationCallback)
+    startClickHandling(getTranslation, getTranslationCallback)
+    startMouseMoveHandling()
+    removePopupUponScrolling()
+    attachTATAndCopyPasteHandler(addTATAndCopyPasteListener)
+    addMessageHandlersToWindow(getTranslation, getTranslationCallback, disableExtension, grayOutIcon)
   }
-
-  if (!(output instanceof String)) {
-    output = JSON.stringify(output)
-  }
-
-  translation.translation = output
-
-
-  sendResponse(translation)
 }
 
 
-Core.ignoreThisPage = (options) => {
-  const isBlacklisted = $.grep(options.except_urls, function (url) {
-    return RegExp(url).test(window.location.href)
-  }).length > 0
-  const isWhitelisted = $.grep(options.only_urls, function (url) {
-    return RegExp(url).test(window.location.href)
-  }).length > 0 ||
-    options.only_urls.length === 0
-  return isBlacklisted || !isWhitelisted
-}
+/**
+ * responsible to call `saveOptions` that saves options of current page
+ */
+type AddSaveOptionsHandler = { (saveOptions: () => void) }
 
 
 /**
@@ -131,45 +163,53 @@ const templateIds = {
 
 function removePopup(nodeType) {
   $(nodeType).each(function () {
-    const self = this
-    $(this.shadowRoot.querySelector('main')).fadeOut('fast', function () {
-      self.remove()
-    })
+
+    $(this.shadowRoot.querySelector('main'))
+      .fadeOut('fast', () => this.remove()
+      )
   })
   $('#' + templateIds[nodeType]).remove()
 }
 
 
-let templates = {}
+const templates = {}
+
+
+function progressEventHasHTMLDocumentInTargetResponse(e): e is { target: { response: HTMLDocument } } {
+  return e.target && e.target.response
+}
+
 
 /**
- * This is run twice upon loading of any tabs. It attaches the scripts our popup html needs to the head of current html.
+ * It:
+ *  1. attaches the script to the <head> of current html.
+ *  2. saves the <template> in the html in a global js object for future use from the script
  *
- * It also saves popup html as objects for future use and modification.
- *
- * By how chrome plugin works, all the extension javascript and html files are in different context (different from user
- * opened web-pages). Chrome API getURL is needed to access them
- *
- * @param component
- * @param getURL the api to get html and javascript by filename
+ * @param {string} component the name of the pair of script and html. A "popup" component conceptually stands for
+ * both popup.html and popup.js
+ * @param getURL the api to get html and javascript by component name
  */
 function registerTransoverComponent(component, getURL) {
-  const html = component + '.html'
-  const script = component + '.js'
+  const htmlURL = getURL(component + '.html')
+  const scriptURL = getURL(component + '.js')
 
   const xhr = new XMLHttpRequest()
-  xhr.open('GET', getURL(html), true)
+  xhr.open('GET', htmlURL, true)
   xhr.responseType = 'document'
   xhr.onload = function (e) {
-    const doc = e.target.response
-    const template = doc.querySelector('template')
-    templates[template.id] = template
+    if (progressEventHasHTMLDocumentInTargetResponse(e)) {
+      const doc = e.target.response
+      const template = doc.querySelector('template')
+      templates[template.id] = template
+    } else {
+      console.error("Failed to get template HTMLs")
+    }
   }
   xhr.send()
 
   const s = document.createElement('script')
   s.type = 'text/javascript'
-  s.src = getURL(script)
+  s.src = scriptURL
   s.async = true
   document.head.appendChild(s)
 }
@@ -192,10 +232,11 @@ function copyToClipboard(text) {
  * @param x word x coordinate
  * @param y word y coordinate
  * @param $popup
- * @return Object e.g. {x: 123, y: 123}
+ * @return
  */
 function calculatePosition(x, y, $popup) {
-  const pos = {}
+  let calculatedX = 0
+  let calculatedY = 0
   const margin = 5
   const anchor = 10
   const outerWidth = Number($popup.attr('outer-width'))
@@ -203,15 +244,15 @@ function calculatePosition(x, y, $popup) {
 
   // show popup to the right of the word if it fits into window this way
   if (x + anchor + outerWidth + margin < $(window).width()) {
-    pos.x = x + anchor
+    calculatedX = x + anchor
   }
   // show popup to the left of the word if it fits into window this way
   else if (x - anchor - outerWidth - margin > 0) {
-    pos.x = x - anchor - outerWidth
+    calculatedX = x - anchor - outerWidth
   }
   // show popup at the very left if it is not wider than window
   else if (outerWidth + margin * 2 < $(window).width()) {
-    pos.x = margin
+    calculatedX = margin
   }
   // resize popup width to fit into window and position it the very left of the window
   else {
@@ -219,23 +260,23 @@ function calculatePosition(x, y, $popup) {
 
     $popup.attr('content-width', $(window).width() - margin * 2 - non_content_x)
     $popup.attr('content-height', Number($popup.attr('content-height')) + 4)
-    pos.x = margin
+    calculatedX = margin
   }
 
   // show popup above the word if it fits into window this way
   if (y - anchor - outerHeight - margin > 0) {
-    pos.y = y - anchor - outerHeight
+    calculatedY = y - anchor - outerHeight
   }
   // show popup below the word if it fits into window this way
   else if (y + anchor + outerHeight + margin < $(window).height()) {
-    pos.y = y + anchor
+    calculatedY = y + anchor
   }
   // show popup at the very top of the window
   else {
-    pos.y = margin
+    calculatedY = margin
   }
 
-  return pos
+  return {x: calculatedX, y: calculatedY}
 }
 
 
@@ -260,10 +301,7 @@ function showPopup(e, content) {
 }
 
 // used to determine whether a mousemove is a tremor
-let last_mouse_stop = {x: 0, y: 0}
-
-
-Core.timer25 = undefined
+const last_mouse_stop = {x: 0, y: 0}
 
 
 function startNoiselessMouseMovementsListening() {
@@ -275,55 +313,71 @@ function startNoiselessMouseMovementsListening() {
 
     clearTimeout(Core.timer25)
 
-    if (Core.options) {
-      let delay = Core.options.delay
-      if (window.getSelection().toString()) {
 
-        if (Core.options.selection_key_only) {
-          delay = 200
-        }
-      } else {
-        if (Core.options.word_key_only) {
-          delay = 200
-        }
+    let delay = options.delay
+    if (window.getSelection().toString()) {
+
+      if (options.selection_key_only) {
+        delay = 200
       }
-
-      Core.timer25 = setTimeout(function () {
-        delay = Core.options.delay
-        const mousestop = new $.Event('mousestop')
-        last_mouse_stop.x = mousestop.clientX = e.clientX
-        last_mouse_stop.y = mousestop.clientY = e.clientY
-
-        $(document).trigger(mousestop)
-      }, delay)
+    } else {
+      if (options.word_key_only) {
+        delay = 200
+      }
     }
+
+    Core.timer25 = setTimeout(function () {
+      delay = options.delay
+      const mousestop = new $.Event('mousestop')
+      last_mouse_stop.x = mousestop.clientX = e.clientX
+      last_mouse_stop.y = mousestop.clientY = e.clientY
+
+      $(document).trigger(mousestop)
+    }, delay)
+
 
   })
 }
 
 let show_popup_key_pressed = false
-let last_translation = ''
+let last_translation: FailedTranslation | SuccessfulTranslation = ''
 
-function startKeyPressListening(asyncGetTranslation, getTranslationCallback) {
+/**
+ * A non-blocking function that (calls API) and gets translation
+ */
+type GetTranslation = { (selection: string, callback: { (translation: ReturnType<GetTranslation>): void }): unknown }
 
-  $(document).keydown(function (e) {
+/**
+ * show translation on the page
+ */
+type GetTranslationCallback = { (translation: ReturnType<GetTranslation>): FailedTranslation | SuccessfulTranslation }
+
+
+/**
+ *
+ * @param getTranslation
+ * @param getTranslationCallback will be passed to `getTranslation`
+ */
+function startKeyPressListening(getTranslation: GetTranslation, getTranslationCallback: GetTranslationCallback) {
+
+  $(document).on('keydown', function (e) {
     // respect "translate only when xx key is held" option
 
-    if (TransOver.modifierKeys[e.keyCode] === Core.options.popup_show_trigger) {
+    if (TransOver.modifierKeys[e.keyCode] === options.popup_show_trigger) {
       show_popup_key_pressed = true
       const selection = window.getSelection().toString()
 
-      if (Core.options.selection_key_only && selection) {
+      if (options.selection_key_only && selection) {
         // debug('Got selection_key_only')
 
-        asyncGetTranslation(selection, (response) => {
+        getTranslation(selection, (response) => {
           const translation = getTranslationCallback(response)
           if (!translation) {
             return
           }
           const xy = {clientX: last_mouse_stop.x, clientY: last_mouse_stop.y}
           last_translation = translation
-          let translation_html = TransOver.formatTranslation(translation)
+          const translation_html = TransOver.formatTranslation(translation)
           showPopup(xy, translation_html)
         })
 
@@ -336,8 +390,8 @@ function startKeyPressListening(asyncGetTranslation, getTranslationCallback) {
     if (e.keyCode === 27) {
       removePopup('transover-type-and-translate-popup')
     }
-  }).keyup(function (e) {
-    if (TransOver.modifierKeys[e.keyCode] === Core.options.popup_show_trigger) {
+  }).on('keyup', function (e) {
+    if (TransOver.modifierKeys[e.keyCode] === options.popup_show_trigger) {
       show_popup_key_pressed = false
     }
   })
@@ -345,19 +399,25 @@ function startKeyPressListening(asyncGetTranslation, getTranslationCallback) {
 
 }
 
-
-Core.disable_on_this_page = false
-
 function withOptionsSatisfied(e, do_stuff) {
   //respect 'translate only when alt pressed' option
-  // console.log('word_key_only?', Core.options.word_key_only)
-  if (Core.options.word_key_only && !show_popup_key_pressed) return
+  // console.log('word_key_only?', options.word_key_only)
+  if (options.word_key_only && !show_popup_key_pressed) return
 
   //respect "don't translate these sites"
   if (Core.disable_on_this_page) return
 
   do_stuff()
 
+}
+
+
+function isInputElementOrTextArea(e: Element): e is HTMLTextAreaElement | HTMLInputElement {
+  return /INPUT|TEXTAREA/.test(e.nodeName)
+}
+
+function isHTMLElement(e: Element): e is HTMLElement {
+  return e instanceof HTMLElement
 }
 
 
@@ -390,10 +450,9 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
         return null
       }
 
-      hit_text_node = hit_text_node.childNodes[0]
-
+      hit_text_node = hit_text_node.childNodes[0] as Element
       $(text_nodes).unwrap()
-
+      console.dir(hit_text_node)
       return hit_text_node
     }
 
@@ -454,14 +513,14 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
         $(minimal_text_node).replaceWith(function () {
           return this.textContent.replace(XRegExp('(<|>|&|' + word_re + ')', 'gs'), function ($0, $1) {
             switch ($1) {
-            case '<':
-              return '&lt;'
-            case '>':
-              return '&gt;'
-            case '&':
-              return '&amp;'
-            default:
-              return '<transover>' + $1 + '</transover>'
+              case '<':
+                return '&lt;'
+              case '>':
+                return '&gt;'
+              case '&':
+                return '&amp;'
+              default:
+                return '<transover>' + $1 + '</transover>'
             }
           })
         })
@@ -494,11 +553,10 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
   }
 
   //skip inputs and editable divs
-  if (/INPUT|TEXTAREA/.test(hit_elem.nodeName) || hit_elem.isContentEditable
+  if (isInputElementOrTextArea(hit_elem) || (isHTMLElement(hit_elem) && hit_elem.isContentEditable)
     || $(hit_elem).parents().filter(function () {
       return this.isContentEditable
     }).length > 0) {
-
     return
   }
 
@@ -512,9 +570,10 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
       sel_container = sel_container.parentNode
     }
 
+
     if (
       // only choose selection if mouse stopped within immediate parent of selection
-      ($(hit_elem).is(sel_container) || $.contains(sel_container, hit_elem))
+      ($(hit_elem).is(<Element>sel_container) || $.contains(<Element>sel_container, hit_elem))
       // and since it can still be quite a large area
       // narrow it down by only choosing selection if mouse points at the element that is (partially) inside selection
       && selection.containsNode(hit_elem, true)
@@ -522,7 +581,7 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
       // resulting in selection translation showing up in random places
     ) {
       word = selection.toString()
-    } else if (Core.options.translate_by === 'point') {
+    } else if (options.translate_by === 'point') {
       word = getHitWord(e)
     }
   } else {
@@ -530,15 +589,15 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
   }
   if (word !== '') {
     asyncGetTranslation(word, (response) => {
-      // console.log('lllmao', response)
+
       const translation = getTranslationCallback(response)
-      // console.log('123', translation)
+
       if (!translation) {
         // debug('skipping empty translation')
         return
       }
       last_translation = translation
-      let translation_html = TransOver.formatTranslation(translation)
+      const translation_html = TransOver.formatTranslation(translation)
       showPopup(e, translation_html)
 
 
@@ -555,13 +614,13 @@ function startMouseStopHandling(asyncGetTranslation, getTranslationCallback) {
       // console.log('sTriNG:', window.getSelection().toString())
       // translate selection unless 'translate selection on alt only' is set
       if (window.getSelection().toString()) {
-        if (!Core.options.selection_key_only || show_popup_key_pressed) {
+        if (!options.selection_key_only || show_popup_key_pressed) {
 
           extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
         }
 
       } else {
-        if (Core.options.translate_by === 'point') {
+        if (options.translate_by === 'point') {
           extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
         }
       }
@@ -572,9 +631,10 @@ function startMouseStopHandling(asyncGetTranslation, getTranslationCallback) {
 
 function startClickHandling(asyncGetTranslation, getTranslationCallback) {
 
-  $(document).click(function (e) {
+  $(document).on('click', function (e) {
+
     withOptionsSatisfied(e, function () {
-      if (Core.options.translate_by !== 'click')
+      if (options.translate_by !== 'click')
         return
 
       // don't translate when
@@ -583,7 +643,6 @@ function startClickHandling(asyncGetTranslation, getTranslationCallback) {
         return
       if ($(e.target).closest('button').length > 0)
         return
-
       extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
     })
     return true
@@ -597,18 +656,18 @@ function startClickHandling(asyncGetTranslation, getTranslationCallback) {
  * @returns {boolean}
  */
 function hasMouseReallyMoved(e) { //or is it a tremor?
-  // console.log(e.clientX, e.clientY)
-  const left_boundry = parseInt(last_mouse_stop.x) - 5,
-    right_boundry = parseInt(last_mouse_stop.x) + 5,
-    top_boundry = parseInt(last_mouse_stop.y) - 5,
-    bottom_boundry = parseInt(last_mouse_stop.y) + 5
+                                  // console.log(e.clientX, e.clientY)
+  const left_boundry = Math.round(last_mouse_stop.x) - 5,
+    right_boundry = Math.round(last_mouse_stop.x) + 5,
+    top_boundry = Math.round(last_mouse_stop.y) - 5,
+    bottom_boundry = Math.round(last_mouse_stop.y) + 5
 
   return e.clientX > right_boundry || e.clientX < left_boundry || e.clientY > bottom_boundry || e.clientY < top_boundry
 }
 
 
 function startMouseMoveHandling() {
-  $(document).mousemove(
+  $(document).on('mousemove',
     /**
      * check if it's just a small tremor. If it's not a tremor, fire a 'mousemove_without_noise' with attributes 'clientX' 'clientY'
      */
@@ -639,16 +698,23 @@ function removePopupUponScrolling() {
 
 }
 
-function attachTATandCopyPasteHandler(addListener) {
+
+type TATAndCopyPasteHandler = { (request: 'open_type_and_translate' | 'copy-translation-to-clipboard'): void }
+
+
+/**
+ *
+ * @param addListener We will supply a callback to the function. The callback opens TAT popup and handle copy-pasting.
+ * `addListener` is responsible to call this callback when TAT or CopyPaste request is received.
+ */
+function attachTATAndCopyPasteHandler(addListener: (TATAndCopyPasteHandler) => void) {
   addListener(function (request) {
     // detects whether window is in an iframe
     if (window !== window.top) return
-
-
     if (request === 'open_type_and_translate') {
       if ($('transover-type-and-translate-popup').length === 0) {
         const $popup = createPopup('transover-type-and-translate-popup', templates[templateIds['transover-type-and-translate-popup']])
-        $popup.attr('data-disable_on_this_page', Core.disable_on_this_page)
+        $popup.attr('data-disable_on_this_page', Core.disable_on_this_page.toString())
         $('body').append($popup)
         $popup.each(function () {
           $(this.shadowRoot.querySelector('main')).hide().fadeIn('fast')
@@ -664,8 +730,8 @@ function attachTATandCopyPasteHandler(addListener) {
         if (Array.isArray(last_translation)) {
           toClipboard = last_translation.map(t => {
             let line = ''
-            if (t.pos) {
-              line = t.pos + ': '
+            if (t.lemma) {
+              line = t.lemma + ': '
             }
             line = line + t.meanings.slice(0, 5).join(', ')
             return line
@@ -679,7 +745,33 @@ function attachTATandCopyPasteHandler(addListener) {
   })
 }
 
-function registerComponents(getURL) {
+/**
+ * @see registerComponents
+ */
+type GetComponentURL = { (componentName: string): URL }
+
+/**
+ * In extensions, this function is supposed to be run upon loading/refreshing of any new tab/page.
+ *
+ * It registers popup.html, tat_popup.html, popup.js, tat_popup.ts ("type-and-translate popup") to the dom.
+ *
+ * By registering, we mean:
+ *
+ *  for html files:
+ *    The html files contain a single <template> we can clone to display different contents. The templates are saved
+ *    in global `template` object for future instantiation
+ *
+ *  for js files:
+ *    It attaches both js scripts to the <head> of current html, which runs them. The scripts create handlers that
+ *    handles API calling, popup creation, destruction.
+ *    Noticeably, popup creation is done by instantiating html templates registered in `template` object
+ *
+ * By how chrome plugin works, all the extension javascript and html files are stored in a different context
+ * (different from user opened web-pages/tabs). Chrome API getURL is needed to access them
+ *
+ * @param getURL the api to get html and javascript by filename
+ */
+function registerComponents(getURL: GetComponentURL) {
   $(function () {
     registerTransoverComponent('popup', getURL)
     registerTransoverComponent('tat_popup', getURL)
@@ -708,7 +800,7 @@ function addMessageHandlersToWindow(asyncGetTranslation, getTranslationCallback,
         const e = {clientX: $(window).width(), clientY: 0}
 
         last_translation = translation
-        let translation_html = TransOver.formatTranslation(translation)
+        const translation_html = TransOver.formatTranslation(translation)
         showPopup(e, translation_html)
 
       })
@@ -725,20 +817,6 @@ function addMessageHandlersToWindow(asyncGetTranslation, getTranslationCallback,
       removePopup('transover-type-and-translate-popup')
     }
   })
-}
-
-Core.start = function (getURL, loadAndApplyOptions, asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListener, disable, grayOutIcon) {
-  registerComponents(getURL)
-  loadAndApplyUserOptions(loadAndApplyOptions)
-  reloadAndApplyOptionsOnTabSwitch(loadAndApplyOptions)
-  startNoiselessMouseMovementsListening()
-  startKeyPressListening(asyncGetTranslation, getTranslationCallback)
-  startMouseStopHandling(asyncGetTranslation, getTranslationCallback)
-  startClickHandling(asyncGetTranslation, getTranslationCallback)
-  startMouseMoveHandling()
-  removePopupUponScrolling()
-  attachTATandCopyPasteHandler(addTATAndCopyPasteListener)
-  addMessageHandlersToWindow(asyncGetTranslation, getTranslationCallback, disable, grayOutIcon)
 }
 
 export default Core

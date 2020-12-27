@@ -1,38 +1,40 @@
 // Chrome runs contentscript.js whenever the user creates a tab. Contentscript.js has the same context as the opened tab
 // meaning it can manipulate web content.
 
-import TransOver from './lib/transover_utils'
-import Core from './lib/transover_core'
+import Core from '../lib/transover_core'
 
 // const debug = require('debug')('transover')
 
 
-const getURL = function (e){ return chrome.extension.getURL(e)}
+const getURL = function (e) {
+  return new URL(chrome.extension.getURL(e))
+}
 
-const loadAndApplyOptions = () =>
-{
-  let options = {}
+const applyUserOptions = () => {
+  const options = {except_urls: [], only_urls: []}
 
-  chrome.runtime.sendMessage({handler: 'get_options'},    function (response) {
+  chrome.runtime.sendMessage({handler: 'get_options'}, function (response) {
     $.extend(options, JSON.parse(response.options))
     Core.disable_on_this_page = Core.ignoreThisPage(options)
     chrome.runtime.sendMessage({handler: 'setIcon', disabled: Core.disable_on_this_page})
-  } )
+  })
 
   return options
 }
 
-const asyncGetTranslation = (word, callback) =>{
-  chrome.runtime.sendMessage({handler:'translate', word:word}, callback)
+const asyncGetTranslation = (word, callback) => {
+  chrome.runtime.sendMessage({handler: 'translate', word: word}, callback)
 }
 
 const getTranslationCallback = (response) => {
-  return TransOver.deserialize(response.translation)
+  return response.translation
 }
 
-let addTATAndCopyPasteListener = function (e) {chrome.runtime.onMessage.addListener(e)}
+const addTATAndCopyPasteListener = function (e) {
+  chrome.runtime.onMessage.addListener(e)
+}
 
-const disable = () =>{
+const disable = () => {
   chrome.runtime.sendMessage({
     handler: 'toggle_disable_on_this_page',
     disable_on_this_page: Core.disable_on_this_page,
@@ -40,10 +42,10 @@ const disable = () =>{
   })
 }
 
-const grayOutIcon = () =>{
+const grayOutIcon = () => {
   chrome.runtime.sendMessage({handler: 'setIcon', disabled: Core.disable_on_this_page})
 }
 
-Core.start(getURL,loadAndApplyOptions,asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListener, disable, grayOutIcon)
+Core.start(getURL, applyUserOptions, asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListener, disable, grayOutIcon)
 
 

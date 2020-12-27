@@ -1,0 +1,3 @@
+# this config is recommended on cypress's typescript tutorial page
+parser: "@typescript-eslint/parser"
+extends: "plugin:cypress/recommended"

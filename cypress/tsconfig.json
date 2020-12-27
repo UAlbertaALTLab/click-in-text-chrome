@@ -1,0 +1,11 @@
+// this is recommended by cypress's typescript tutorial page
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["es5", "dom"],
+    "types": ["cypress"]
+  },
+  "include": [
+    "**/*.ts"
+  ]
+}

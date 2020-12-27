@@ -2,11 +2,11 @@
 * @file Assuming a ./dist folder, this file zips ./dist to a publishable chrome-extension. This script also removes excluded test files which are only necessary in cypress testing.
  */
 
-const fs = require('fs')
+import * as fs from 'fs'
 const fsPromise = fs.promises
-const path = require('path')
-const recursiveReadDir = require('recursive-readdir')
-const JSZip = require('jszip')
+import * as path from 'path'
+import * as recursiveReadDir from 'recursive-readdir'
+import * as JSZip from 'jszip'
 
 
 const outName = 'click-in-text.zip'

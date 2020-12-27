@@ -1,1 +1,8 @@
-{"video": false, "defaultCommandTimeout": 10000 }
+{
+  "video": false,
+  "defaultCommandTimeout": 10000,
+  "pluginsFile": false,
+  "fixturesFolder": false,
+  "supportFile": "cypress/support/commands.ts",
+  "screenshotOnRunFailure": false
+}

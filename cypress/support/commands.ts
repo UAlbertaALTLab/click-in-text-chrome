@@ -24,17 +24,16 @@
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
-Cypress.Commands.add('set_option', (doshit) => {
+Cypress.Commands.add('set_option', (configurate) => {
 
   cy.get('#more_options_link').click()
-  doshit()
+  configurate()
   cy.get('#save_button').click()
 
 })
 
 
 
-// 'move' command simulates hovering on an element
 Cypress.Commands.add('move',{prevSubject: true}, (subject) => {
   const $this = subject
 
@@ -54,7 +53,6 @@ Cypress.Commands.add('move',{prevSubject: true}, (subject) => {
 })
 
 
-// 'selectText' command simulates selecting some text
 Cypress.Commands.add('selectText',{prevSubject: true}, (subject) => {
 
 
