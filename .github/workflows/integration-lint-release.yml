@@ -40,7 +40,7 @@ jobs:
       # Now we lint the code. Note we have an if: below, which makes it  only run on push, not on pull requests.
       - name: Reformat JavaScript
         if: github.event_name == 'push'
-        run: npx eslint --fix .
+        run: npm run lint-fix
 
       - name: Git Auto Commit
         if: github.event_name == 'push'
@@ -52,7 +52,7 @@ jobs:
       - name: Zip chrome-extension
         if: github.event_name == 'push'
         # ./dist folder is built during integration testing, so just UTF-8 cleaning and zipping are needed
-        run: node libexec/fix-non-ascii-contentscript.js && node libexec/zip-extension.js
+        run: ts-node libexec/fix-non-ascii-contentscript.ts && ts-node libexec/zip-extension.ts
 
       # date will be used as release tag and name
       - name: Get current date
