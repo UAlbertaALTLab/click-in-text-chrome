@@ -6,7 +6,7 @@ class Popup extends HTMLElement {
 
   constructor() {
     super()
-    const t = document.querySelector('#transover-popup-template').content.cloneNode(true)
+    const t = (<HTMLTemplateElement>document.querySelector('#transover-popup-template')).content.cloneNode(true)
     this.attachShadow({mode: 'open'}).appendChild(t)
   }
 
@@ -16,7 +16,7 @@ class Popup extends HTMLElement {
     if (attribute === 'content') {
       main.innerHTML = newVal
 
-      setTimeout(function() {
+      setTimeout(function () {
         const main = this.shadowRoot.querySelector('main')
         const style = window.getComputedStyle(main)
 

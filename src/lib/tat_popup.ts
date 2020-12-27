@@ -1,12 +1,16 @@
 // this file defines the custom element "transover-type-and-translate-popup" using the tat_popup.html template
-class Popup extends HTMLElement {
+
+/**
+ * TAT means type-and-translate
+ */
+class TATPopup extends HTMLElement {
   static get observedAttributes() {
     return ['data-disable_on_this_page']
   }
 
   constructor() {
     super()
-    const t = document.querySelector('#transover-tat-popup-template').content.cloneNode(true)
+    const t = (<HTMLTemplateElement>document.querySelector('#transover-tat-popup-template')).content.cloneNode(true)
     this.attachShadow({mode: 'open'}).appendChild(t)
 
     const sendTranslate = () => {
@@ -36,7 +40,8 @@ class Popup extends HTMLElement {
     }
 
     this.q('#tat_close').onclick = (e) => {
-      window.postMessage({type: 'tat_close'})
+      // todo: what does targetOrigin (the second argument) do?
+      window.postMessage({type: 'tat_close'}, "")
       e.preventDefault()
     }
 
@@ -58,4 +63,4 @@ class Popup extends HTMLElement {
   }
 }
 
-window.customElements.define('transover-type-and-translate-popup', Popup)
+window.customElements.define('transover-type-and-translate-popup', TATPopup)
