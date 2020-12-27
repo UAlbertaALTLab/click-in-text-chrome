@@ -1,7 +1,6 @@
-# these are `libexec` specific eslint settings that override parts of the root eslintrc
-parserOptions:
-  sourceType: script
-rules:
-  # allow console since libexec scripts are only used in development and
-  # console.logs are meaningful prompts to the devs
-  no-console: 0
+env:
+  node: true
+
+extends:
+  - "eslint:recommended"
+  - "plugin:@typescript-eslint/recommended"
