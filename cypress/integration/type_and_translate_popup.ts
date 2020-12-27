@@ -1,4 +1,7 @@
-// fixme: this test passes locally on my Windows system but not on GitHub actions
+// fixme: this test won't passes in cypress testing, but if you serve the directory yourself and manually test it works.
+//  In cypress testing "#tat_button" does nothing upon press.
+//  run `npm run build && ts-node libexec/test-server.ts` to manually test.
+//  or even just open a new tab in cypress's browser and the button will work.
 describe.skip('Popup Existence', function() {
   it('displays a tat popup', function() {
 
