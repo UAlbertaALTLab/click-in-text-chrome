@@ -52,7 +52,7 @@ jobs:
       - name: Zip chrome-extension
         if: github.event_name == 'push'
         # ./dist folder is built during integration testing, so just UTF-8 cleaning and zipping are needed
-        run: npx ts-node libexec/fix-non-ascii-contentscript.ts && ts-node libexec/zip-extension.ts
+        run: npx ts-node libexec/fix-non-ascii-contentscript.ts && npx ts-node libexec/zip-extension.ts
 
       # date will be used as release tag and name
       - name: Get current date
