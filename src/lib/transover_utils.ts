@@ -49,35 +49,6 @@ export const TransOver = {
           return '&amp;'
       }
     })
-  },
-
-  regexp_escape: function (s: string): string {
-    return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
-  }
-
-  ,
-
-  // todo: is this used at all, delete this and see. Maybe this one is used for TAT popup? (type-and-translate). If that
-  //  is the case, then this is code duplication and should be refactored, we already have the same thing in transover_core.ts
-  /**
-   *
-   * @param word
-   * @param onresponse
-   * @param sendResponse
-   */
-  translate: function (word: string, onresponse, sendResponse) {
-
-    const options = {
-      url: 'https://sapir.artsrn.ualberta.ca/cree-dictionary/click-in-text?q=' + word,
-      dataType: 'json',
-      success: function on_success(data) {
-        onresponse(data, word, sendResponse)
-      },
-      error: function (xhr, status, e) {
-        console.log({e: e, xhr: xhr})
-      }
-    }
-    $.ajax(options)
   }
 
 }

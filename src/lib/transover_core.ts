@@ -235,8 +235,8 @@ function copyToClipboard(text) {
  * @return
  */
 function calculatePosition(x, y, $popup) {
-  let calculatedX = 0
-  let calculatedY = 0
+  let calculatedX: number
+  let calculatedY: number
   const margin = 5
   const anchor = 10
   const outerWidth = Number($popup.attr('outer-width'))
@@ -691,7 +691,7 @@ function startMouseMoveHandling() {
 
 function removePopupUponScrolling() {
 
-  $(document).scroll(function () {
+  $(document).on('scroll', function () {
     removePopup('transover-popup')
   })
 
@@ -707,7 +707,7 @@ type TATAndCopyPasteHandler = { (request: 'open_type_and_translate' | 'copy-tran
  * @param addListener We will supply a callback to the function. The callback opens TAT popup and handle copy-pasting.
  * `addListener` is responsible to call this callback when TAT or CopyPaste request is received.
  */
-function attachTATAndCopyPasteHandler(addListener: (TATAndCopyPasteHandler) => void) {
+function attachTATAndCopyPasteHandler(addListener: (handler: TATAndCopyPasteHandler) => void) {
   addListener(function (request) {
     // detects whether window is in an iframe
     if (window !== window.top) return
