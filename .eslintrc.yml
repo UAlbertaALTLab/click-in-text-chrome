@@ -1,0 +1,3 @@
+# this is only for webpack.config.ts
+parserOptions:
+  ecmaVersion: 6
