@@ -3,10 +3,10 @@ import {TransOver} from './transover_utils'
 import XRegExp from 'xregexp/src'
 import {SerializedSearchResult} from '@altlab/types'
 import {options} from "./options";
-import Node = JQuery.Node;
 /// <reference path="html.d.ts"/>
 import popup from './popup.html'
 import tatPopup from './tat_popup.html'
+import Node = JQuery.Node;
 
 
 const popupTemplate = buildTemplateFromString(popup)
@@ -204,11 +204,6 @@ function removePopup(nodeType) {
       )
   })
   $('#' + templateIds[nodeType]).remove()
-}
-
-
-function progressEventHasHTMLDocumentInTargetResponse(e): e is { target: { response: HTMLDocument } } {
-  return e.target && e.target.response
 }
 
 
