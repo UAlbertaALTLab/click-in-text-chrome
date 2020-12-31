@@ -11,7 +11,7 @@ import * as JSZip from 'jszip'
 
 const outName = 'click-in-text.zip'
 
-const excludedFiles = ['test.js', 'test.html']
+const excludedFiles = ['test.js', 'test.html', 'embedded.js']
 
 const zip = new JSZip()
 // ignore files named "foo.cs" or files that end in ".html".

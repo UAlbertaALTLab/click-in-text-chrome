@@ -10,7 +10,12 @@ class TATPopup extends HTMLElement {
 
   constructor() {
     super()
-    const t = (<HTMLTemplateElement>document.querySelector('#transover-tat-popup-template')).content.cloneNode(true)
+    // very weird: if you do template.content instead of template["content"],
+    // tsl will complain that "Element does not have attribute content",
+    // while HTMLTemplateElement DOES have that attribute.
+    // It is almost like casting here doesn't work. Also tried <HTMLTemplateElement>-fashioned casting with no the
+    // same result.
+    const t = (<HTMLTemplateElement>document.querySelector('#transover-tat-popup-template'))["content"].cloneNode(true)
     this.attachShadow({mode: 'open'}).appendChild(t)
 
     const sendTranslate = () => {
