@@ -34,10 +34,13 @@ const config = {
   module: {
     rules: [
       // All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
-      { test: /\.tsx?$/, loader: 'ts-loader' },
+      {test: /\.tsx?$/, loader: 'ts-loader'},
 
       // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
-      { test: /\.js$/, loader: 'source-map-loader' },
+      {test: /\.js$/, loader: 'source-map-loader'},
+
+      // used to load popup.html and tat_popup.html in js
+      {test: /\.html$/i, loader: 'html-loader',}
     ]
   },
 
@@ -51,8 +54,6 @@ const config = {
         // todo: consider getting rid of these by writing them in JS
         'src/embedded/test.html',
         'src/browser/options.html',
-        'src/lib/popup.html',
-        'src/lib/tat_popup.html',
 
         'node_modules/xregexp/xregexp-all.js'
       ], {to: 'dist'}
