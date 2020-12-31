@@ -1,4 +1,5 @@
 // this file defines the custom element "popup" using the popup.html template
+// Will be appended to dom's <head>
 class Popup extends HTMLElement {
   static get observedAttributes() {
     return ['content', 'top', 'left', 'width', 'height']
@@ -6,7 +7,14 @@ class Popup extends HTMLElement {
 
   constructor() {
     super()
-    const t = (<HTMLTemplateElement>document.querySelector('#transover-popup-template')).content.cloneNode(true)
+
+    // very weird: if you do template.content instead of template["content"],
+    // tsl will complain that "Element does not have attribute content",
+    // while HTMLTemplateElement DOES have that attribute.
+    // It is almost like casting here doesn't work. Also tried <HTMLTemplateElement>-fashioned casting with no the
+    // same result.
+    const template = document.querySelector('#transover-popup-template') as HTMLTemplateElement
+    const t = template["content"].cloneNode(true)
     this.attachShadow({mode: 'open'}).appendChild(t)
   }
 
