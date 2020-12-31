@@ -25,10 +25,6 @@ const asyncGetTranslation = (word, callback) => {
   Core.callAPI(word, Core.parseAPIResponse, callback)
 }
 
-const getTranslationCallback = (response) => {
-  return response.translation
-}
-
 const addTATAndCopyPasteListener = function (callback) {
 
   $(() => {
@@ -74,7 +70,7 @@ const grayOutIcon = () => {
 }
 
 
-Core.start(getURL, addSaveOptionHandler, asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListener, disable, grayOutIcon)
+Core.start(getURL, addSaveOptionHandler, asyncGetTranslation, addTATAndCopyPasteListener, disable, grayOutIcon)
 
 
 

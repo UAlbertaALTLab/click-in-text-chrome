@@ -26,9 +26,6 @@ const asyncGetTranslation = (word, callback) => {
   chrome.runtime.sendMessage({handler: 'translate', word: word}, callback)
 }
 
-const getTranslationCallback = (response) => {
-  return response.translation
-}
 
 const addTATAndCopyPasteListener = function (e) {
   chrome.runtime.onMessage.addListener(e)
@@ -46,6 +43,6 @@ const grayOutIcon = () => {
   chrome.runtime.sendMessage({handler: 'setIcon', disabled: Core.disable_on_this_page})
 }
 
-Core.start(getURL, applyUserOptions, asyncGetTranslation, getTranslationCallback, addTATAndCopyPasteListener, disable, grayOutIcon)
+Core.start(getURL, applyUserOptions, asyncGetTranslation, addTATAndCopyPasteListener, disable, grayOutIcon)
 
 
