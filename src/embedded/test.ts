@@ -1,12 +1,5 @@
 import Core from '../lib/transover_core'
 
-// const debug = require('debug')('transover')
-
-
-const getURL = function (e) {
-  return e
-}
-
 
 const addSaveOptionHandler = (saveOptions) => {
 
@@ -27,6 +20,7 @@ const asyncGetTranslation = (word, callback) => {
 
 const addTATAndCopyPasteListener = function (callback) {
 
+  // extra buttons for testing
   $(() => {
 
       $('#copy_button').on('click', function () {
@@ -40,10 +34,8 @@ const addTATAndCopyPasteListener = function (callback) {
     }
   )
 
-  // not tested in cypress cuz cypress is a bitch on pressing shortcuts
+  // not tested in cypress cuz cypress refuses to accept key combinations
   document.onkeyup = function (e) {
-    //.keyCode is deprecated, use .code
-    // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code/code_values
     const code = e.code
 
     // assume the user uses alt + X as "copy translation to clipboard" shortcut
@@ -70,7 +62,7 @@ const grayOutIcon = () => {
 }
 
 
-Core.start(getURL, addSaveOptionHandler, asyncGetTranslation, addTATAndCopyPasteListener, disable, grayOutIcon)
+Core.start(addSaveOptionHandler, asyncGetTranslation, addTATAndCopyPasteListener, disable, grayOutIcon)
 
 
 

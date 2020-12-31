@@ -1,12 +1,16 @@
-// helper functions
 import {TransOver} from './transover_utils'
 import XRegExp from 'xregexp/src'
 import {SerializedSearchResult} from '@altlab/types'
 import {options} from "./options";
-/// <reference path="html.d.ts"/>
+/// <reference path="html_loader.d.ts"/>
 import popup from './popup.html'
 import tatPopup from './tat_popup.html'
 import Node = JQuery.Node;
+
+// these scripts are appended to the <head> of html each time a tab is refreshed/opened
+/// <reference path="raw_loader.d.ts"/>
+import popupScript from 'raw-loader!ts-loader!./popup.raw'
+import tatPopupScript from 'raw-loader!ts-loader!./tat_popup.raw'
 
 
 const popupTemplate = buildTemplateFromString(popup)
@@ -160,8 +164,8 @@ const Core = {
   timer25: undefined,
   disable_on_this_page: false,
 
-  start: (getURL: GetComponentURL, addSaveOptionsHandler: AddSaveOptionsHandler, getTranslation: GetTranslation, addTATAndCopyPasteListener: (TATAndCopyPasteHandler) => void, disableExtension: (...args) => unknown, grayOutIcon: (...args) => unknown): void => {
-    registerComponents(getURL)
+  start: (addSaveOptionsHandler: AddSaveOptionsHandler, getTranslation: GetTranslation, addTATAndCopyPasteListener: (TATAndCopyPasteHandler) => void, disableExtension: (...args) => unknown, grayOutIcon: (...args) => unknown): void => {
+    registerComponents()
     addSaveOptionsHandler(() => {
       options.saveOptions()
     })
@@ -208,20 +212,13 @@ function removePopup(nodeType) {
 
 
 /**
- * It attaches the scripts to the <head> of current html.
- *  2. saves the <template> in the html in a global js object for future use from the script
- *
- * @param popupJSName
- * @param getURL the api to get the corresponding javascript by popup name
+ * Attaches javascript as <script> elements to the <head> of current html.
  */
-function appendPopupScriptToHead(popupJSName: "popup" | "tat_popup", getURL) {
-
-  const scriptURL = getURL(popupJSName + '.js')
+function appendScriptToHead(js: string) {
 
   const s = document.createElement('script')
   s.type = 'text/javascript'
-  s.src = scriptURL
-  s.async = true
+  s.innerHTML = js
   document.head.appendChild(s)
 }
 
@@ -629,7 +626,7 @@ function startMouseStopHandling(asyncGetTranslation) {
 }
 
 
-function startClickHandling(asyncGetTranslation:GetTranslation) {
+function startClickHandling(asyncGetTranslation: GetTranslation) {
 
   $(document).on('click', function (e) {
 
@@ -656,7 +653,7 @@ function startClickHandling(asyncGetTranslation:GetTranslation) {
  * @returns {boolean}
  */
 function hasMouseReallyMoved(e) { //or is it a tremor?
-                                  // console.log(e.clientX, e.clientY)
+  // console.log(e.clientX, e.clientY)
   const left_boundry = Math.round(last_mouse_stop.x) - 5,
     right_boundry = Math.round(last_mouse_stop.x) + 5,
     top_boundry = Math.round(last_mouse_stop.y) - 5,
@@ -746,14 +743,9 @@ function attachTATAndCopyPasteHandler(addListener: (handler: TATAndCopyPasteHand
 }
 
 /**
- * @see registerComponents
- */
-type GetComponentURL = { (componentName: string): URL }
-
-/**
  * In extensions, this function is supposed to be run upon loading/refreshing of any new tab/page.
  *
- * It attaches popup.js, tat_popup.ts ("type-and-translate popup") as <script> elements to the <head>.
+ * It attaches popup.raw.ts, tat_popup.raw.ts ("type-and-translate popup") as <script> elements to the <head>.
  *
  *    The scripts create handlers that
  *    handles API calling, popup creation, destruction.
@@ -761,13 +753,11 @@ type GetComponentURL = { (componentName: string): URL }
  *
  * By how chrome plugin works, all the extension javascript (and html if any) files are stored in a different context
  * (different from user opened web-pages/tabs). Chrome API getURL is needed to access them
- *
- * @param getURL the api to get html and javascript by filename
  */
-function registerComponents(getURL: GetComponentURL) {
+function registerComponents() {
   $(function () {
-    appendPopupScriptToHead('popup', getURL)
-    appendPopupScriptToHead('tat_popup', getURL)
+    appendScriptToHead(popupScript)
+    appendScriptToHead(tatPopupScript)
   })
 }
 
