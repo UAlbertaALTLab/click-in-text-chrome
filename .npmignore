@@ -1,0 +1,8 @@
+# this is an allowlist instead of a blocklist
+
+# Disallow all files
+*
+
+
+# We only publish this one file
+!dist/embedded.js
