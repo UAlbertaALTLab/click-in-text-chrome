@@ -4,6 +4,46 @@ import XRegExp from 'xregexp/src'
 import {SerializedSearchResult} from '@altlab/types'
 import {options} from "./options";
 import Node = JQuery.Node;
+/// <reference path="html.d.ts"/>
+import popup from './popup.html'
+import tatPopup from './tat_popup.html'
+
+
+const popupTemplate = buildTemplateFromString(popup)
+const tatPopupTemplate = buildTemplateFromString(tatPopup)
+
+
+const templateIds = {
+  'transover-popup': popupTemplate.id,
+  'transover-type-and-translate-popup': tatPopupTemplate.id
+}
+
+
+const templates: { [p: string]: HTMLTemplateElement } = {
+  [popupTemplate.id]: popupTemplate,
+  [tatPopupTemplate.id]: tatPopupTemplate
+}
+
+
+/**
+ *
+ * @param templateString A string that contains a single <template></template> element
+ */
+function buildTemplateFromString(templateString: string): HTMLTemplateElement {
+
+  // TIL: comments outside of templates count as Jquery nodes too...
+  // So, iterating is necessary even if the html only has one <template> string
+  for (const node of $.parseHTML(templateString)) {
+    if (node instanceof HTMLTemplateElement) {
+      return node
+    }
+  }
+
+  console.error("Can not parse template from string:")
+  console.error(templateString)
+
+}
+
 
 /**
  * The function that handles parsedResponse
@@ -120,19 +160,19 @@ const Core = {
   timer25: undefined,
   disable_on_this_page: false,
 
-  start: (getURL: GetComponentURL, addSaveOptionsHandler: AddSaveOptionsHandler, getTranslation: GetTranslation, getTranslationCallback: GetTranslationCallback, addTATAndCopyPasteListener: (TATAndCopyPasteHandler) => void, disableExtension: (...args) => unknown, grayOutIcon: (...args) => unknown): void => {
+  start: (getURL: GetComponentURL, addSaveOptionsHandler: AddSaveOptionsHandler, getTranslation: GetTranslation, addTATAndCopyPasteListener: (TATAndCopyPasteHandler) => void, disableExtension: (...args) => unknown, grayOutIcon: (...args) => unknown): void => {
     registerComponents(getURL)
     addSaveOptionsHandler(() => {
       options.saveOptions()
     })
     startNoiselessMouseMovementsListening()
-    startKeyPressListening(getTranslation, getTranslationCallback)
-    startMouseStopHandling(getTranslation, getTranslationCallback)
-    startClickHandling(getTranslation, getTranslationCallback)
+    startKeyPressListening(getTranslation)
+    startMouseStopHandling(getTranslation)
+    startClickHandling(getTranslation)
     startMouseMoveHandling()
     removePopupUponScrolling()
     attachTATAndCopyPasteHandler(addTATAndCopyPasteListener)
-    addMessageHandlersToWindow(getTranslation, getTranslationCallback, disableExtension, grayOutIcon)
+    addMessageHandlersToWindow(getTranslation, disableExtension, grayOutIcon)
   }
 }
 
@@ -155,11 +195,6 @@ function createPopup(nodeType, popupHTML) {
   return $('<' + nodeType + '>')
 }
 
-const templateIds = {
-  'transover-popup': 'transover-popup-template',
-  'transover-type-and-translate-popup': 'transover-tat-popup-template'
-}
-
 
 function removePopup(nodeType) {
   $(nodeType).each(function () {
@@ -172,40 +207,21 @@ function removePopup(nodeType) {
 }
 
 
-const templates = {}
-
-
 function progressEventHasHTMLDocumentInTargetResponse(e): e is { target: { response: HTMLDocument } } {
   return e.target && e.target.response
 }
 
 
 /**
- * It:
- *  1. attaches the script to the <head> of current html.
+ * It attaches the scripts to the <head> of current html.
  *  2. saves the <template> in the html in a global js object for future use from the script
  *
- * @param {string} component the name of the pair of script and html. A "popup" component conceptually stands for
- * both popup.html and popup.js
- * @param getURL the api to get html and javascript by component name
+ * @param popupJSName
+ * @param getURL the api to get the corresponding javascript by popup name
  */
-function registerTransoverComponent(component, getURL) {
-  const htmlURL = getURL(component + '.html')
-  const scriptURL = getURL(component + '.js')
+function appendPopupScriptToHead(popupJSName: "popup" | "tat_popup", getURL) {
 
-  const xhr = new XMLHttpRequest()
-  xhr.open('GET', htmlURL, true)
-  xhr.responseType = 'document'
-  xhr.onload = function (e) {
-    if (progressEventHasHTMLDocumentInTargetResponse(e)) {
-      const doc = e.target.response
-      const template = doc.querySelector('template')
-      templates[template.id] = template
-    } else {
-      console.error("Failed to get template HTMLs")
-    }
-  }
-  xhr.send()
+  const scriptURL = getURL(popupJSName + '.js')
 
   const s = document.createElement('script')
   s.type = 'text/javascript'
@@ -345,20 +361,13 @@ let last_translation: FailedTranslation | SuccessfulTranslation = ''
 /**
  * A non-blocking function that (calls API) and gets translation
  */
-type GetTranslation = { (selection: string, callback: { (translation: ReturnType<GetTranslation>): void }): unknown }
-
-/**
- * show translation on the page
- */
-type GetTranslationCallback = { (translation: ReturnType<GetTranslation>): FailedTranslation | SuccessfulTranslation }
-
+type GetTranslation = { (selection: string, callback: { (parsedResponse: ParsedResponse): void }): void }
 
 /**
  *
  * @param getTranslation
- * @param getTranslationCallback will be passed to `getTranslation`
  */
-function startKeyPressListening(getTranslation: GetTranslation, getTranslationCallback: GetTranslationCallback) {
+function startKeyPressListening(getTranslation: GetTranslation) {
 
   $(document).on('keydown', function (e) {
     // respect "translate only when xx key is held" option
@@ -371,7 +380,7 @@ function startKeyPressListening(getTranslation: GetTranslation, getTranslationCa
         // debug('Got selection_key_only')
 
         getTranslation(selection, (response) => {
-          const translation = getTranslationCallback(response)
+          const translation = response.translation
           if (!translation) {
             return
           }
@@ -380,7 +389,6 @@ function startKeyPressListening(getTranslation: GetTranslation, getTranslationCa
           const translation_html = TransOver.formatTranslation(translation)
           showPopup(xy, translation_html)
         })
-
 
       }
     }
@@ -424,11 +432,9 @@ function isHTMLElement(e: Element): e is HTMLElement {
 /**
  * This function extracts the word under cursor and shows the popup with translation.
  * @param e
- * @param asyncGetTranslation async function that has 2 arguments. 1: the word to be translated 2: a callback function. This async function should have a response that contains translation
- * @param getTranslationCallback The callback function of getTranslation. It should receive the response and either return a string, which will be displayed directly in a popup. (e.g. "oops...translation not found"). Or it can return an array of different objects as dictionary entries for this word.
- * Each entry looks like {meanings: ['meaning from source 1', 'meaning from source 2'], pos: 'string fst analysis such as nahapiw+V+AI+Cnj+Prs+X'}
+ * @param asyncGetTranslation
  */
-function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback) {
+function extractWordAndShowPopup(e, asyncGetTranslation: GetTranslation) {
 
   function getHitWord(e) {
 
@@ -452,7 +458,6 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
 
       hit_text_node = hit_text_node.childNodes[0] as Element
       $(text_nodes).unwrap()
-      console.dir(hit_text_node)
       return hit_text_node
     }
 
@@ -590,7 +595,7 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
   if (word !== '') {
     asyncGetTranslation(word, (response) => {
 
-      const translation = getTranslationCallback(response)
+      const translation = response.translation
 
       if (!translation) {
         // debug('skipping empty translation')
@@ -606,7 +611,7 @@ function extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
   }
 }
 
-function startMouseStopHandling(asyncGetTranslation, getTranslationCallback) {
+function startMouseStopHandling(asyncGetTranslation) {
   $(document).on('mousestop', function (e) {
 
     // console.log('string:', window.getSelection().toString())
@@ -616,12 +621,12 @@ function startMouseStopHandling(asyncGetTranslation, getTranslationCallback) {
       if (window.getSelection().toString()) {
         if (!options.selection_key_only || show_popup_key_pressed) {
 
-          extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
+          extractWordAndShowPopup(e, asyncGetTranslation)
         }
 
       } else {
         if (options.translate_by === 'point') {
-          extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
+          extractWordAndShowPopup(e, asyncGetTranslation)
         }
       }
     })
@@ -629,7 +634,7 @@ function startMouseStopHandling(asyncGetTranslation, getTranslationCallback) {
 }
 
 
-function startClickHandling(asyncGetTranslation, getTranslationCallback) {
+function startClickHandling(asyncGetTranslation:GetTranslation) {
 
   $(document).on('click', function (e) {
 
@@ -643,7 +648,7 @@ function startClickHandling(asyncGetTranslation, getTranslationCallback) {
         return
       if ($(e.target).closest('button').length > 0)
         return
-      extractWordAndShowPopup(e, asyncGetTranslation, getTranslationCallback)
+      extractWordAndShowPopup(e, asyncGetTranslation)
     })
     return true
   })
@@ -753,39 +758,31 @@ type GetComponentURL = { (componentName: string): URL }
 /**
  * In extensions, this function is supposed to be run upon loading/refreshing of any new tab/page.
  *
- * It registers popup.html, tat_popup.html, popup.js, tat_popup.ts ("type-and-translate popup") to the dom.
+ * It attaches popup.js, tat_popup.ts ("type-and-translate popup") as <script> elements to the <head>.
  *
- * By registering, we mean:
- *
- *  for html files:
- *    The html files contain a single <template> we can clone to display different contents. The templates are saved
- *    in global `template` object for future instantiation
- *
- *  for js files:
- *    It attaches both js scripts to the <head> of current html, which runs them. The scripts create handlers that
+ *    The scripts create handlers that
  *    handles API calling, popup creation, destruction.
- *    Noticeably, popup creation is done by instantiating html templates registered in `template` object
+ *    Noticeably, popup creation is done by instantiating html templates saved in global `templates` object
  *
- * By how chrome plugin works, all the extension javascript and html files are stored in a different context
+ * By how chrome plugin works, all the extension javascript (and html if any) files are stored in a different context
  * (different from user opened web-pages/tabs). Chrome API getURL is needed to access them
  *
  * @param getURL the api to get html and javascript by filename
  */
 function registerComponents(getURL: GetComponentURL) {
   $(function () {
-    registerTransoverComponent('popup', getURL)
-    registerTransoverComponent('tat_popup', getURL)
+    appendPopupScriptToHead('popup', getURL)
+    appendPopupScriptToHead('tat_popup', getURL)
   })
 }
 
 /**
  * type-and-translate
  * @param asyncGetTranslation
- * @param getTranslationCallback
  * @param disableExtension
  * @param grayOutIcon
  */
-function addMessageHandlersToWindow(asyncGetTranslation, getTranslationCallback, disableExtension, grayOutIcon) {
+function addMessageHandlersToWindow(asyncGetTranslation: GetTranslation, disableExtension, grayOutIcon) {
   window.addEventListener('message', function (e) {
     // We only accept messages from ourselves
     if (e.source !== window)
@@ -793,7 +790,7 @@ function addMessageHandlersToWindow(asyncGetTranslation, getTranslationCallback,
 
     if (e.data.type === 'transoverTranslate') {
       asyncGetTranslation(e.data.text, (response) => {
-        const translation = getTranslationCallback(response)
+        const translation = response.translation
         if (!translation) {
           return
         }
