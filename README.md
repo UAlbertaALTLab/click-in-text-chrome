@@ -95,15 +95,15 @@ We also have a Github action that runs `npm run lint-fix` and commits automatica
 > Just let `npm` scripts do the work. Do not run `eslint` yourself, it by default only lints `.js` files but not `.ts` files [and it's not configurable through
 eslintrc](https://github.com/eslint/eslint/issues/11223).
 
-## Todo: embedded version
+## Embedded version 
 
-Goal: 
+We publish embedded version on npm with `npm publish`. With our `.npmignore`, only `dist/embedded.js` is published.
 
-so that website maintainers can include this one liner in their HTML and get click-in-text on their page:
+Other website maintainers can include this one liner in their HTML and get click-in-text on their page:
  
-    `<script src="https://unpkg.com/cree-click-in-text"></script>`
-    
-Question:
+`<script src="https://unpkg.com/@altlab/click-in-text/dist/embedded"></script>`
+
+More todo:
 
 Do we need an option/configuration page in this embedded version? Current chrome extension supports configuration by
 a chrome proprietary menu, where you can set things like `translation delay`, `translation key - alt/ctrl`, `hover or click` etc.
