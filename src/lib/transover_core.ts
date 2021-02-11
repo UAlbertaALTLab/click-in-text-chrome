@@ -97,7 +97,7 @@ const Core = {
   callAPI(word: string, responseParser: ResponseParser, sendParsedResponse: SendParsedResponse): void {
 
     const options = {
-      url: 'https://sapir.artsrn.ualberta.ca/cree-dictionary/click-in-text?q=' + word,
+      url: 'https://itwewina.altlab.app/click-in-text/?q=' + word,
       dataType: 'json',
       success: function on_success(data) {
         const parsedResponse = responseParser(data, word)
