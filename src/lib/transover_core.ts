@@ -102,6 +102,10 @@ const Core = {
   ): void {
     const apiUrl = options?.apiUrl ?? 'https://itwewina.altlab.app/click-in-text/?q=';
 
+    if (!word) {
+      return;
+    }
+
     const ajaxRequestSettings = {
       url: apiUrl + encodeURIComponent(word),
       dataType: 'json',
