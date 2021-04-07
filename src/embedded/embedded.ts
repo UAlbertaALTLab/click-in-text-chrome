@@ -8,9 +8,12 @@ const addSaveOptionHandler = () => {
   return
 }
 
+// Set `window.clickInTextApiUrl` before `require()`ing `embedded.js` to point
+// at a custom server
+const apiUrl : string | undefined = (window as any).clickInTextApiUrl;
 
 const asyncGetTranslation = (word, callback) => {
-  Core.callAPI(word, Core.parseAPIResponse, callback)
+  Core.callAPI(word, Core.parseAPIResponse, callback, {apiUrl})
 }
 
 const addTATAndCopyPasteListener = function (callback) {
