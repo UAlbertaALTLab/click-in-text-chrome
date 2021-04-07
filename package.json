@@ -1,6 +1,6 @@
 {
   "name": "@altlab/click-in-text",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cree click-in-text plugin",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack && ts-node libexec/fix-non-ascii-contentscript.ts && ts-node libexec/zip-extension.ts",
