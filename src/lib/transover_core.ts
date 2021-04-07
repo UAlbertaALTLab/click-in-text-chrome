@@ -94,10 +94,20 @@ type ResponseParser = (data: { "results": SerializedSearchResult[] }, word: stri
 const Core = {
 
   // where translate api happens
-  callAPI(word: string, responseParser: ResponseParser, sendParsedResponse: SendParsedResponse): void {
+  callAPI(
+      word: string,
+      responseParser: ResponseParser,
+      sendParsedResponse: SendParsedResponse,
+      options?: {apiUrl: string}
+  ): void {
+    const apiUrl = options?.apiUrl ?? 'https://itwewina.altlab.app/click-in-text/?q=';
 
-    const options = {
-      url: 'https://itwewina.altlab.app/click-in-text/?q=' + word,
+    if (!word) {
+      return;
+    }
+
+    const ajaxRequestSettings = {
+      url: apiUrl + encodeURIComponent(word),
       dataType: 'json',
       success: function on_success(data) {
         const parsedResponse = responseParser(data, word)
@@ -107,7 +117,7 @@ const Core = {
         console.error({e: e, xhr: xhr})
       }
     }
-    $.ajax(options)
+    $.ajax(ajaxRequestSettings)
   },
 
   parseAPIResponse(data: { "results": SerializedSearchResult[] }, word: string): ParsedResponse {
