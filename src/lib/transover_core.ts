@@ -1,6 +1,5 @@
 import {TransOver} from './transover_utils'
 import XRegExp from 'xregexp/src'
-import {SerializedSearchResult} from '@altlab/types'
 import {options} from "./options";
 /// <reference path="html_loader.d.ts"/>
 import popup from './popup.html'
@@ -11,6 +10,7 @@ import Node = JQuery.Node;
 /// <reference path="raw_loader.d.ts"/>
 import popupScript from 'raw-loader!ts-loader!./popup.raw'
 import tatPopupScript from 'raw-loader!ts-loader!./tat_popup.raw'
+import {SerializedSearchResult} from "./types";
 
 
 const popupTemplate = buildTemplateFromString(popup)
