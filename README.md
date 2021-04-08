@@ -10,7 +10,7 @@ Specifically `contentscript.js` `background.js`.
 
 Under project root directory
 
-- `npm install`
+- `yarn`
 
 ## Directory Structure
 
@@ -48,11 +48,11 @@ the `crhome://extensions/safdjsaifjg/options.html` url you'll see in the browser
 ## Development Routine
 
 
-1. `npm run dev` (This will watch file changes and repack everything to `./dist` upon file change)
+1. `yarn dev` (This will watch file changes and repack everything to `./dist` upon file change)
 
 2. Write some bugs. Files will be regenerated in `./dist`
 
-3. Test as embedded javascript: Make sure you have disabled this extension on your browser. `npm test` to run cypress tests. (It uses `test.html` `test.ts` and runs the extension code as embedded javascript, as explained earlier)
+3. Test as embedded javascript: Make sure you have disabled this extension on your browser. `yarn test` to run cypress tests. (It uses `test.html` `test.ts` and runs the extension code as embedded javascript, as explained earlier)
 
 4. (Optional) Manual Testing as an extension: Make sure you have installed the extension in development mode as instructed below. The installation only needs to be done once for any browser. Create any new tab or reload an existing tab to test the changes you just made.
 
@@ -88,11 +88,11 @@ This loads the code generated in `./dist` as a chrome plugin.
 
 ## Linter
 
-run `npm run lint` or `npm run lint-fix` under project root. 
+run `yarn run lint` or `yarn run lint-fix` under project root. 
 
-We also have a Github action that runs `npm run lint-fix` and commits automatically to enforce formatting.
+We also have a Github action that runs `yarn run lint-fix` and commits automatically to enforce formatting.
 
-> Just let `npm` scripts do the work. Do not run `eslint` yourself, it by default only lints `.js` files but not `.ts` files [and it's not configurable through
+> Just let `yarn` scripts do the work. Do not run `eslint` yourself, it by default only lints `.js` files but not `.ts` files [and it's not configurable through
 eslintrc](https://github.com/eslint/eslint/issues/11223).
 
 ## Embedded version 

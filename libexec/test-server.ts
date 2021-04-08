@@ -2,14 +2,19 @@
  * @file run this file if you want to start test server and test yourself
  */
 
-import {spawn} from "child_process";
+import {ChildProcess, spawn} from "child_process";
+import {existsSync} from "fs";
 
 
-export function startServer(onClose: (...args) => unknown):void {
+export function startServer(onClose: (...args) => unknown): ChildProcess {
+  if (!existsSync('dist/test.html')) {
+    throw new Error("dist/test.html not found; do you need to run a build first?")
+  }
 
-  spawn('npx', ['http-server', 'dist'], {shell: true})
-  const waitOnProcess = spawn('npx', ['wait-on', 'http-get://localhost:8080/test.html'], {shell: true})
+  const process = spawn('npx', ['ws', '-p', '8080', '-d', 'dist'], {stdio: "inherit"})
+  const waitOnProcess = spawn('npx', ['wait-on', 'http-get://localhost:8080/test.html'], {stdio: "inherit"})
   waitOnProcess.on('close', onClose)
+  return process;
 }
 
 

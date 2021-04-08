@@ -4,15 +4,28 @@
 import {spawn} from 'child_process'
 import {startServer} from "./test-server";
 
-startServer(() => {
-  console.log('starting cypress tests')
+const server = startServer(async () => {
+  // This will be set to 0 if cypress completes successfully.
+  let exitCode = 1;
+  try {
+    console.log('starting cypress tests')
 
-  const cypressProcess = spawn('npx', ['cypress', 'run'], {shell: true})
-  // fixme: we can maybe add stdio option to replace the two lines below
-  //  see https://nodejs.org/api/child_process.html#child_process_options_stdio
-  //  However, I tried stdio:'pipe', stdio: ['pipe', 'pipe', 'pipe'], and stdio: ['ignore', 'pipe', 'pipe']
-  //  None of them shows realtime output of cypress while running `$ npm test`
-  cypressProcess.stdout.on('data', data => console.log(data.toString()))
-  cypressProcess.stderr.on('data', data => console.error(data.toString()))
-  cypressProcess.on('close', code => process.exit(code))
+    let cypressAction = 'run';
+    if (process.env.OPEN_CYPRESS) {
+      cypressAction = 'open';
+    }
+    const cypressProcess = spawn('npx', ['cypress', cypressAction], {stdio: "inherit"})
+    await new Promise<void>((resolve) => {
+      cypressProcess.on('close', (code, signal) => {
+        exitCode = code;
+        if (signal) {
+          exitCode = 1;
+        }
+        resolve();
+      });
+    });
+  } finally {
+    server.kill();
+  }
+  process.exit(exitCode);
 })
