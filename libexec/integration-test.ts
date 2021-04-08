@@ -14,7 +14,8 @@ const server = startServer(async () => {
     if (process.env.OPEN_CYPRESS) {
       cypressAction = 'open';
     }
-    const cypressProcess = spawn('npx', ['cypress', cypressAction], {stdio: "inherit"})
+    const cypressProcess = spawn('npx', ['cypress', cypressAction],
+        {stdio: "inherit", shell: true})
     await new Promise<void>((resolve) => {
       cypressProcess.on('close', (code, signal) => {
         exitCode = code;
