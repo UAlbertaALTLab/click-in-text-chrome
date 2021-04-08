@@ -33,14 +33,14 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - run: npm ci
-      - run: npm run build_dist --if-present
-      - run: npm test
+      - run: yarn
+      - run: yarn run build_dist --if-present
+      - run: yarn test
 
       # Now we lint the code. Note we have an if: below, which makes it  only run on push, not on pull requests.
       - name: Reformat JavaScript
         if: github.event_name == 'push'
-        run: npm run lint-fix
+        run: yarn run lint-fix
 
       - name: Git Auto Commit
         if: github.event_name == 'push'
